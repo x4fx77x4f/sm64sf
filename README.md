@@ -1,6 +1,8 @@
 # SM64SF
 This is an **unofficial** port of Nintendo's *Super Mario 64* to [StarfallEx](https://github.com/thegrb93/StarfallEx). Most code has been translated manually. Currently, it is not playable or very complete.
 
+![Screenshot](https://user-images.githubusercontent.com/70858634/115501968-2ce9e780-a242-11eb-98f3-e1b56301c315.png)
+
 ## License
 This project may contain code from [n64decomp/sm64](https://github.com/n64decomp/sm64), [sm64-port](https://github.com/sm64-port/sm64-port), and [sm64ex](https://github.com/sm64pc/sm64ex). These projects are all proprietary and originally derived from Nintendo's proprietary Super Mario 64.
 
