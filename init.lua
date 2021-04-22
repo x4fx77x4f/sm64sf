@@ -86,16 +86,20 @@ end
 local hash = SF_PATH_HASH('/placeholder.png')
 SF_PATH_PLACEHOLDER = file.existsTemp(hash) or file.writeTemp(hash, getScripts()['sm64sf/placeholder.png'])
 
+-- Load order is going to become a problem. I have no doubt that at some
+-- point an impossible load order will be required, and when that
+-- happens, it's going to fucking suck.
+
 --@include sm64sf/include/pr/gbi.lua
 require('sm64sf/include/pr/gbi.lua')
 --@include sm64sf/include/level_commands.lua
 require('sm64sf/include/level_commands.lua')
---@include sm64sf/levels/entry.lua
-require('sm64sf/levels/entry.lua')
 --@include sm64sf/levels/intro/leveldata.lua
 require('sm64sf/levels/intro/leveldata.lua')
 --@include sm64sf/levels/intro/script.lua
 require('sm64sf/levels/intro/script.lua')
+--@include sm64sf/levels/entry.lua
+require('sm64sf/levels/entry.lua')
 --@include sm64sf/src/menu/intro_geo.lua
 require('sm64sf/src/menu/intro_geo.lua')
 --@include sm64sf/src/engine/level_script.lua

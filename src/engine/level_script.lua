@@ -28,6 +28,7 @@ end
 function level_cmd_load_and_execute(entry)
 	sCurrentCmds = entry
 	sCurrentCmdOffset = 1
+	sCurrentCmd = sCurrentCmds[sCurrentCmdOffset]
 end
 
 function level_cmd_sleep(frames)
@@ -68,6 +69,11 @@ end
 function level_cmd_init_level()
 	clear_objects()
 	clear_areas()
+	return CMD_NEXT()
+end
+
+function level_cmd_set_blackout(active)
+	--osViBlack(active)
 	return CMD_NEXT()
 end
 
