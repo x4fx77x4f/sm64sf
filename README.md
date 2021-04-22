@@ -4,10 +4,14 @@ This is an **unofficial** port of Nintendo's *Super Mario 64* to [StarfallEx](ht
 ![Screenshot](https://user-images.githubusercontent.com/70858634/115682705-b9b8a200-a323-11eb-94d9-2b92a032b4e8.png)
 
 ## Usage
-1. `git clone https://github.com/n64decomp/sm64.git`
-2. Place an unmodified *Super Mario 64* (only tested with U.S. version) ROM file to `baserom.us.z64`.
-3. `./extract_assets.py us`
-4. `./copy_assets.sh wherever/you/put/n64decomp/sm64`
+1. `git clone https://github.com/x4fx77x4f/sm64sf.git sm64sf`
+2. `git clone https://github.com/n64decomp/sm64.git sm64`
+3. Place an unmodified *Super Mario 64* (only tested with U.S. version) ROM file in `sm64/baserom.us.z64`.
+4. `cd sm64 && ./extract_assets.py us && cd ..`
+5. `./sm64sf/copy_assets.sh sm64 sm64sf`
+6. `ln -s "$PWD/sm64sf" ~/.steam/steam/steamapps/common/GarrysMod/garrysmod/data/starfall/sm64sf`
+7. `ln -s "$PWD/sm64sf" ~/.steam/steam/steamapps/common/GarrysMod/garrysmod/data/sf_filedata/sm64sf`
+8. Flash `sm64sf/init.lua` to a chip and connect a screen to it.
 
 ## Completion
 It makes it to the end of the "It's-a me, Mario!" intro before crashing, but doesn't render anything or make any sound.
