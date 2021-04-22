@@ -278,6 +278,7 @@ local LevelScriptJumpTable = {
 function level_script_execute(cmds)
 	sScriptStatus = SCRIPT_RUNNING
 	sCurrentCmds = cmds
+	sCurrentCmdOffset = 1
 	sCurrentCmd = sCurrentCmds[sCurrentCmdOffset]
 	assertf(sCurrentCmd, "failed to find sCurrentCmd at offset %d in %q", sCurrentCmdOffset, tostring(sCurrentCmds))
 	
