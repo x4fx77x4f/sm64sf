@@ -174,6 +174,7 @@ hook.add('render', '', function()
 	-- debug text
 	dbgprintf2("fps: %d", fps)
 	dbgprintf2("quota: %d%%", math.ceil(quotaAverage()/quotaMax()*100))
+	dbgprintf("script: 0x%02X is %d at %d in %q", sCurrentCmd and sCurrentCmd.type or -1, sScriptStatus or -2, sCurrentCmdOffset or -1, tostring(sCurrentCmds) or "nil")
 	-- [[
 	dbgStr = string.gsub(dbgStr, "\n$", "")
 	render.setFont('DebugFixed')

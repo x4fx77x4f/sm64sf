@@ -20,5 +20,5 @@ level_intro_splash_screen = {
 	CMD2A(1),
 	CLEAR_LEVEL(),
 	SLEEP(2),
-	EXIT_AND_EXECUTE(0x14, _introSegmentRomStart, _introSegmentRomEnd, level_intro_mario_head_regular),
+	EXIT_AND_EXECUTE(level_intro_mario_head_regular),
 }

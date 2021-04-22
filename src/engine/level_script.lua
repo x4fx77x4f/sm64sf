@@ -14,11 +14,11 @@ local sCurrAreaIndex = -1
 local sStackTop = sStack
 local sStackBase = nil
 
-local sScriptStatus
+--sScriptStatus
 local sRegister
-local sCurrentCmds
-local sCurrentCmdOffset = 1
-local sCurrentCmd
+--sCurrentCmds
+sCurrentCmdOffset = 1
+--sCurrentCmd
 
 function CMD_NEXT()
 	sCurrentCmdOffset = sCurrentCmdOffset+1
@@ -26,7 +26,18 @@ function CMD_NEXT()
 end
 
 function level_cmd_load_and_execute(entry)
+	sStackTop = sStackTop
+	
 	sCurrentCmds = entry
+	sCurrentCmdOffset = 1
+	sCurrentCmd = sCurrentCmds[sCurrentCmdOffset]
+end
+
+function level_cmd_exit_and_execute(entry)
+	local targetAddr = entry
+	
+	sStackTop = sStackBase
+	sCurrentCmds = targetAddr
 	sCurrentCmdOffset = 1
 	sCurrentCmd = sCurrentCmds[sCurrentCmdOffset]
 end
@@ -103,6 +114,14 @@ function level_cmd_init_level()
 	return CMD_NEXT()
 end
 
+function level_cmd_clear_level()
+	clear_objects()
+	--clear_area_graph_nodes()
+	clear_areas()
+	
+	return CMD_NEXT()
+end
+
 function level_cmd_alloc_level_pool()
 	return CMD_NEXT()
 end
@@ -139,6 +158,31 @@ function level_cmd_end_area()
 	return CMD_NEXT()
 end
 
+function level_cmd_create_instant_warp(index, destArea, displaceX, displaceY, displaceZ)
+	local warp
+	
+	if sCurrAreaIndex ~= -1 then
+		if gAreas[sCurrAreaIndex].instantWarps == nil then
+			gAreas[sCurrAreaIndex].instantWarps = {{}, {}, {}, {}}
+			
+			for i=INSTANCE_WARP_INDEX_START, INSTANT_WARP_INDEX_STOP do
+				gAreas[sCurrAreaIndex].instantWarps[i].id = 0
+			end
+		end
+		
+		warp = gAreas[sCurrAreaIndex].instantWarps
+		
+		warp[1].id = 1
+		warp[1].area = destArea
+		
+		warp[1].displacement[1] = displaceX
+		warp[1].displacement[2] = displaceY
+		warp[1].displacement[3] = displaceZ
+	end
+	
+	return CMD_NEXT()
+end
+
 function level_cmd_set_blackout(active)
 	--osViBlack(active)
 	return CMD_NEXT()
@@ -152,6 +196,20 @@ function level_cmd_load_area(area)
 	
 	return CMD_NEXT()
 end
+
+function level_cmd_unload_area()
+	unload_area()
+	return CMD_NEXT()
+end
+
+function level_cmd_set_transition(transType, time, colorR, colorG, colorB)
+	if gCurrentArea ~= nil then
+		play_transition(transType, time, colorR, colorG, colorB)
+	end
+	return CMD_NEXT()
+end
+
+level_cmd_nop = CMD_NEXT
 
 local LevelScriptJumpTable = {
 	[0x00] = level_cmd_load_and_execute,
@@ -231,7 +289,6 @@ function level_script_execute(cmds)
 			"no such level command 0x%02X at %d in %s", sCurrentCmd.type, sCurrentCmdOffset, tostring(sCurrentCmds)
 		)(unpack(sCurrentCmd))
 		--]]
-		dbgprintf("sCurrentCmd: 0x%02X at %d", sCurrentCmd.type, sCurrentCmdOffset)
 		coroutine.yield()
 	end
 	

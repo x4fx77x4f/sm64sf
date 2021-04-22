@@ -5,7 +5,7 @@ for i=1, 0x100 do
 end
 local gAreaData = {{}, {}, {}, {}, {}, {}, {}, {}}
 
-local gWarpTransition
+local gWarpTransition = {data={}}
 
 local gCurrCourseNum
 local gCurrActNum
@@ -63,8 +63,19 @@ function load_area(index)
 	end
 end
 
+function unload_area()
+	if gCurrentArea ~= nil then
+		--unload_objects_from_area(0, gCurrentArea.index)
+		--geo_call_global_function_nodes(gCurrentArea.unk04.node, GEO_CONTEXT_AREA_UNLOAD)
+		
+		gCurrentArea.flags = 0 -- redundant?
+		gCurrentArea = nil
+		gWarpTransition.isActive = false
+	end
+end
+
 function render_game()
-	if true then
+	if gCurrentArea ~= nil and not gWarpTransition.pauseRendering then
 		--gDPSetScissor()
 		--render_hud()
 		
