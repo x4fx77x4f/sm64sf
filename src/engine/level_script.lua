@@ -61,8 +61,39 @@ end
 
 level_cmd_skippable_nop = CMD_NEXT
 
+function level_cmd_call(arg, func)
+	sRegister = func(arg, sRegister)
+	
+	if sRegister == 0 then
+		sScriptStatus = SCRIPT_PAUSED
+	else
+		sScriptStatus = SCRIPT_RUNNING
+		return CMD_NEXT()
+	end
+end
+
 function level_cmd_set_register(value)
 	sRegister = value
+	return CMD_NEXT()
+end
+
+function level_cmd_load_to_fixed_address(loadAddr, romStart, romEnd)
+	-- TODO: implement FIXED_LOAD
+	return CMD_NEXT()
+end
+
+function level_cmd_load_raw(loadAddr, romStart, romEnd)
+	-- TODO: implement LOAD_RAW
+	return CMD_NEXT()
+end
+
+function level_cmd_load_mio0(loadAddr, romStart, romEnd)
+	-- TODO: implement LOAD_MIO0
+	return CMD_NEXT()
+end
+
+function level_cmd_load_mario_head(loadAddr, romStart, romEnd)
+	-- TODO: implement LOAD_MARIO_HEAD
 	return CMD_NEXT()
 end
 
@@ -72,8 +103,53 @@ function level_cmd_init_level()
 	return CMD_NEXT()
 end
 
+function level_cmd_alloc_level_pool()
+	return CMD_NEXT()
+end
+
+function level_cmd_free_level_pool()
+	return CMD_NEXT()
+end
+
+function level_cmd_begin_area(index, geo)
+	local areaIndex = index
+	local geoLayoutAddr = geo
+	
+	if areaIndex < 8 then
+		--local screenArea = process_geo_layout(sLevelPool, geoLayoutAddr)
+		local screenArea = {views={}}
+		local node = screenArea.views[1]
+		
+		sCurrAreaIndex = areaIndex
+		screenArea.areaIndex = areaIndex
+		gAreas[areaIndex].unk04 = screenArea
+		
+		if node ~= nil then
+			gAreas[areaIndex].camera = node.config.camera
+		else
+			gAreas[areaIndex].camera = nil
+		end
+	end
+	
+	return CMD_NEXT()
+end
+
+function level_cmd_end_area()
+	sCurrAreaIndex = -1
+	return CMD_NEXT()
+end
+
 function level_cmd_set_blackout(active)
 	--osViBlack(active)
+	return CMD_NEXT()
+end
+
+function level_cmd_load_area(area)
+	local areaIndex = area
+	
+	--stop_sounds_in_continuous_banks()
+	load_area(areaIndex)
+	
 	return CMD_NEXT()
 end
 

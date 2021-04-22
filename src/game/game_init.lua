@@ -16,6 +16,7 @@ end
 
 -- Clears the framebuffer, allowing it to be overwritten.
 function clear_frame_buffer(color)
+	-- TODO: support color param
 	render.clear(Color(0, 0, 0, 255), false)
 end
 

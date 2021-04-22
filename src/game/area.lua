@@ -1,6 +1,34 @@
+local gPlayerSpawnInfos = {{}}
+local D_8033A160 = {}
+for i=1, 0x100 do
+	D_8033A160[i] = {}
+end
+local gAreaData = {{}, {}, {}, {}, {}, {}, {}, {}}
+
+local gWarpTransition
+
+local gCurrCourseNum
+local gCurrActNum
+local gCurrAreaIndex
+local gSavedCourseNum
+local gPauseScreenMode
+local gSaveOptSelectIndex
+
+local gMarioSpawnInfo = gPlayerSpawnInfos[1] -- This won't work. Fucking pointer bullshit.
+local gLoadedGraphNodes = D_8033A160
+gAreas = gAreaData
+local gCurrentArea = nil
+local gCurrCreditsEntry = nil
 local D_8032CE74 = nil
 local D_8032CE78 = nil
+local gWarpTransDelay = 0
+local gFBSetColor = 0
 local gWarpTransFBSetColor = 0
+local gWarpTransRed = 0
+local gWarpTransGreen = 0
+local gWarpTransBlue = 0
+local gCurrSaveFileNum = 1
+local gCurrLevelNum = LEVEL_MIN
 
 function print_intro_text()
 	if bit.band(gGlobalTimer, 0x1F) < 20 then
@@ -15,6 +43,24 @@ end
 
 function clear_areas()
 	
+end
+
+function load_area(index)
+	if gCurrentArea == nil and gAreaData[index].unk04 ~= nil then
+		gCurrentArea = gAreaData[index]
+		gCurrAreaIndex = gCurrentArea.index
+		
+		if gCurrentArea.terrainData ~= nil then
+			load_area_terrain(index, gCurrentArea.terrainData, gCurrentArea.surfaceRooms, gCurrentArea.macroObjects)
+		end
+		
+		if gCurrentArea.objectSpawnInfos ~= nil then
+			spawn_objects_from_info(0, gCurrentArea.objectSpawnInfos)
+		end
+		
+		--load_obj_warp_nodes()
+		--geo_call_global_function_nodes(gCurrentArea.unk04.node, GEO_CONTEXT_AREA_LOAD)
+	end
 end
 
 function render_game()

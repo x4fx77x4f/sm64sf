@@ -94,22 +94,28 @@ SF_PATH_PLACEHOLDER = file.existsTemp(hash) or file.writeTemp(hash, getScripts()
 require('sm64sf/include/pr/gbi.lua')
 --@include sm64sf/include/level_commands.lua
 require('sm64sf/include/level_commands.lua')
+
+--@include sm64sf/src/engine/level_script.lua
+require('sm64sf/src/engine/level_script.lua')
+
+--@include sm64sf/src/menu/intro_geo.lua
+require('sm64sf/src/menu/intro_geo.lua')
+--@include sm64sf/src/menu/level_select_menu.lua
+require('sm64sf/src/menu/level_select_menu.lua')
+
+--@include sm64sf/src/game/area.lua
+require('sm64sf/src/game/area.lua')
+--@include sm64sf/src/game/game_init.lua
+require('sm64sf/src/game/game_init.lua')
+--@include sm64sf/src/game/object_list_processor.lua
+require('sm64sf/src/game/object_list_processor.lua')
+
 --@include sm64sf/levels/intro/leveldata.lua
 require('sm64sf/levels/intro/leveldata.lua')
 --@include sm64sf/levels/intro/script.lua
 require('sm64sf/levels/intro/script.lua')
 --@include sm64sf/levels/entry.lua
 require('sm64sf/levels/entry.lua')
---@include sm64sf/src/menu/intro_geo.lua
-require('sm64sf/src/menu/intro_geo.lua')
---@include sm64sf/src/engine/level_script.lua
-require('sm64sf/src/engine/level_script.lua')
---@include sm64sf/src/game/game_init.lua
-require('sm64sf/src/game/game_init.lua')
---@include sm64sf/src/game/object_list_processor.lua
-require('sm64sf/src/game/object_list_processor.lua')
---@include sm64sf/src/game/area.lua
-require('sm64sf/src/game/area.lua')
 
 local thread = coroutine.create(thread5_game_loop)
 
