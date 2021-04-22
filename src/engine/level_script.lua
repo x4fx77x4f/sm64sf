@@ -1,6 +1,75 @@
-SCRIPT_RUNNING = 1
-SCRIPT_PAUSED = 0
-SCRIPT_PAUSED2 = -1
+local SCRIPT_RUNNING = 1
+local SCRIPT_PAUSED = 0
+local SCRIPT_PAUSED2 = -1
+
+local sStack = {}
+
+local sLevelPool = nil
+
+local sDelayFrames = 0
+local sDelayFrames2 = 0
+
+local sCurrAreaIndex = -1
+
+local sStackTop = sStack
+local sStackBase = nil
+
+local sScriptStatus
+local sRegister
+local sCurrentCmds
+local sCurrentCmdOffset = 1
+local sCurrentCmd
+
+function CMD_NEXT()
+	sCurrentCmdOffset = sCurrentCmdOffset+1
+	sCurrentCmd = sCurrentCmds[sCurrentCmdOffset]
+end
+
+function level_cmd_load_and_execute(entry)
+	sCurrentCmds = entry
+	sCurrentCmdOffset = 1
+end
+
+function level_cmd_sleep(frames)
+	sScriptStatus = SCRIPT_PAUSED
+	
+	if sDelayFrames == 0 then
+		sDelayFrames = frames
+	else
+		sDelayFrames = sDelayFrames-1
+		if sDelayFrames == 0 then
+			sScriptStatus = SCRIPT_RUNNING
+			return CMD_NEXT()
+		end
+	end
+end
+
+function level_cmd_sleep2(frames)
+	sScriptStatus = SCRIPT_PAUSED2
+	
+	if sDelayFrames == 0 then
+		sDelayFrames = frames
+	else
+		sDelayFrames = sDelayFrames-1
+		if sDelayFrames == 0 then
+			sScriptStatus = SCRIPT_RUNNING
+			return CMD_NEXT()
+		end
+	end
+end
+
+level_cmd_skippable_nop = CMD_NEXT
+
+function level_cmd_set_register(value)
+	sRegister = value
+	return CMD_NEXT()
+end
+
+function level_cmd_init_level()
+	clear_objects()
+	clear_areas()
+	return CMD_NEXT()
+end
 
 local LevelScriptJumpTable = {
 	[0x00] = level_cmd_load_and_execute,
@@ -66,16 +135,26 @@ local LevelScriptJumpTable = {
 	[0x3C] = level_cmd_get_or_set_var,
 }
 
-function level_script_execute(cmd)
+function level_script_execute(cmds)
 	sScriptStatus = SCRIPT_RUNNING
-	sCurrentCmd = cmd
+	sCurrentCmds = cmds
+	sCurrentCmd = sCurrentCmds[sCurrentCmdOffset]
+	assertf(sCurrentCmd, "failed to find sCurrentCmd at offset %d in %q", sCurrentCmdOffset, tostring(sCurrentCmds))
 	
 	while sScriptStatus == SCRIPT_RUNNING do
-		sCurrentCmd()
+		--LevelScriptJumpTable[sCurrentCmd.type](unpack(sCurrentCmd))
+		-- [[
+		assertf(
+			LevelScriptJumpTable[sCurrentCmd.type],
+			"no such level command 0x%02X at %d in %s", sCurrentCmd.type, sCurrentCmdOffset, tostring(sCurrentCmds)
+		)(unpack(sCurrentCmd))
+		--]]
+		dbgprintf("sCurrentCmd: 0x%02X at %d", sCurrentCmd.type, sCurrentCmdOffset)
+		coroutine.yield()
 	end
 	
 	init_render_image()
 	render_game()
 	
-	return sCurrentCmd
+	return sCurrentCmds
 end

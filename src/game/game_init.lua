@@ -19,6 +19,11 @@ function clear_frame_buffer(color)
 	render.clear(Color(0, 0, 0, 255), false)
 end
 
+-- Clears and initializes the viewport.
+function clear_viewport(viewport, color)
+	
+end
+
 -- Starts rendering the scene.
 function init_render_image()
 	clear_z_buffer()
@@ -43,15 +48,14 @@ function display_and_vsync()
 end
 
 function thread5_game_loop()
-	local addr
+	local script
 	
-	-- point addr to the entry point into the level script data.
-	addr = level_script_entry
+	script = level_script_entry
 	
 	rendering_init()
 	
 	while true do
-		addr = level_script_execute(addr)
+		script = level_script_execute(script)
 		
 		display_and_vsync()
 		
