@@ -16,7 +16,7 @@ BACKGROUND_PURPLE_SKY = 9
 
 local function wrap(CC)
 	return function(...)
-		return {type=CC, ...}
+		return {[0x00]=CC, ...}
 	end
 end
 GEO_BRANCH_AND_LINK = wrap(0x00)

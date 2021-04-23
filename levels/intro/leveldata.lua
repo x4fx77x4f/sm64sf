@@ -40,6 +40,10 @@ intro_seg7_vertex_0700B460 = {
 	{{{   268,    196,     -1}, 0, {     0,      0}, {0xff, 0xff, 0xff, 0xff}}},
 }
 
+-- This isn't sustainable. There's no way I could have everything loaded
+-- at once when I start adding more and more assets. I'll have to find
+-- some way to load and unload dynamically.
+
 -- 0x0700B4A0 - 0x0700B4A2
 intro_seg7_texture_0700B4A0 = material.createFromImage(
 	'../'..SF_PATH_PATCH('/levels/intro/2_copyright.rgba16.png'),

@@ -20,7 +20,7 @@ local sRegister
 sCurrentCmdOffset = 1
 --sCurrentCmd
 
-function CMD_NEXT()
+local function CMD_NEXT()
 	sCurrentCmdOffset = sCurrentCmdOffset+1
 	sCurrentCmd = sCurrentCmds[sCurrentCmdOffset]
 end
@@ -139,8 +139,7 @@ function level_cmd_begin_area(index, geo)
 	local geoLayoutAddr = geo
 	
 	if areaIndex < 8 then
-		--local screenArea = process_geo_layout(sLevelPool, geoLayoutAddr)
-		local screenArea = {views={}}
+		local screenArea = process_geo_layout(sLevelPool, geoLayoutAddr)
 		local node = screenArea.views[1]
 		
 		sCurrAreaIndex = areaIndex

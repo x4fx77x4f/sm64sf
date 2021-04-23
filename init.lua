@@ -99,6 +99,8 @@ require('sm64sf/include/level_commands.lua')
 --@include sm64sf/include/pr/gbi.lua
 require('sm64sf/include/pr/gbi.lua')
 
+--@include sm64sf/src/engine/geo_layout.lua
+require('sm64sf/src/engine/geo_layout.lua')
 --@include sm64sf/src/engine/level_script.lua
 require('sm64sf/src/engine/level_script.lua')
 
