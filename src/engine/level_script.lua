@@ -25,7 +25,7 @@ local function CMD_NEXT()
 	sCurrentCmd = sCurrentCmds[sCurrentCmdOffset]
 end
 
-function level_cmd_load_and_execute(entry)
+local function level_cmd_load_and_execute(entry)
 	assertf(entry, "tried to execute null level script from %s at %d", _GR[sCurrentCmds], sCurrentCmdOffset)
 	
 	sStackTop = sStackTop
@@ -35,7 +35,7 @@ function level_cmd_load_and_execute(entry)
 	sCurrentCmd = sCurrentCmds[sCurrentCmdOffset]
 end
 
-function level_cmd_exit_and_execute(entry)
+local function level_cmd_exit_and_execute(entry)
 	assertf(entry, "tried to execute null level script from %s at %d", _GR[sCurrentCmds], sCurrentCmdOffset)
 	
 	local targetAddr = entry
@@ -46,7 +46,7 @@ function level_cmd_exit_and_execute(entry)
 	sCurrentCmd = sCurrentCmds[sCurrentCmdOffset]
 end
 
-function level_cmd_sleep(frames)
+local function level_cmd_sleep(frames)
 	sScriptStatus = SCRIPT_PAUSED
 	
 	if sDelayFrames == 0 then
@@ -60,7 +60,7 @@ function level_cmd_sleep(frames)
 	end
 end
 
-function level_cmd_sleep2(frames)
+local function level_cmd_sleep2(frames)
 	sScriptStatus = SCRIPT_PAUSED2
 	
 	if sDelayFrames == 0 then
@@ -76,7 +76,7 @@ end
 
 level_cmd_skippable_nop = CMD_NEXT
 
-function level_cmd_call(arg, func)
+local function level_cmd_call(arg, func)
 	sRegister = func(arg, sRegister)
 	
 	if sRegister == 0 then
@@ -87,38 +87,38 @@ function level_cmd_call(arg, func)
 	end
 end
 
-function level_cmd_set_register(value)
+local function level_cmd_set_register(value)
 	sRegister = value
 	return CMD_NEXT()
 end
 
-function level_cmd_load_to_fixed_address(loadAddr, romStart, romEnd)
+local function level_cmd_load_to_fixed_address(loadAddr, romStart, romEnd)
 	-- TODO: implement FIXED_LOAD
 	return CMD_NEXT()
 end
 
-function level_cmd_load_raw(loadAddr, romStart, romEnd)
+local function level_cmd_load_raw(loadAddr, romStart, romEnd)
 	-- TODO: implement LOAD_RAW
 	return CMD_NEXT()
 end
 
-function level_cmd_load_mio0(loadAddr, romStart, romEnd)
+local function level_cmd_load_mio0(loadAddr, romStart, romEnd)
 	-- TODO: implement LOAD_MIO0
 	return CMD_NEXT()
 end
 
-function level_cmd_load_mario_head(loadAddr, romStart, romEnd)
+local function level_cmd_load_mario_head(loadAddr, romStart, romEnd)
 	-- TODO: implement LOAD_MARIO_HEAD
 	return CMD_NEXT()
 end
 
-function level_cmd_init_level()
+local function level_cmd_init_level()
 	clear_objects()
 	clear_areas()
 	return CMD_NEXT()
 end
 
-function level_cmd_clear_level()
+local function level_cmd_clear_level()
 	clear_objects()
 	--clear_area_graph_nodes()
 	clear_areas()
@@ -126,15 +126,15 @@ function level_cmd_clear_level()
 	return CMD_NEXT()
 end
 
-function level_cmd_alloc_level_pool()
+local function level_cmd_alloc_level_pool()
 	return CMD_NEXT()
 end
 
-function level_cmd_free_level_pool()
+local function level_cmd_free_level_pool()
 	return CMD_NEXT()
 end
 
-function level_cmd_begin_area(index, geo)
+local function level_cmd_begin_area(index, geo)
 	local areaIndex = index
 	local geoLayoutAddr = geo
 	
@@ -156,12 +156,12 @@ function level_cmd_begin_area(index, geo)
 	return CMD_NEXT()
 end
 
-function level_cmd_end_area()
+local function level_cmd_end_area()
 	sCurrAreaIndex = -1
 	return CMD_NEXT()
 end
 
-function level_cmd_create_instant_warp(index, destArea, displaceX, displaceY, displaceZ)
+local function level_cmd_create_instant_warp(index, destArea, displaceX, displaceY, displaceZ)
 	local warp
 	
 	if sCurrAreaIndex ~= -1 then
@@ -186,12 +186,12 @@ function level_cmd_create_instant_warp(index, destArea, displaceX, displaceY, di
 	return CMD_NEXT()
 end
 
-function level_cmd_set_blackout(active)
+local function level_cmd_set_blackout(active)
 	--osViBlack(active)
 	return CMD_NEXT()
 end
 
-function level_cmd_load_area(area)
+local function level_cmd_load_area(area)
 	local areaIndex = area
 	
 	--stop_sounds_in_continuous_banks()
@@ -200,12 +200,12 @@ function level_cmd_load_area(area)
 	return CMD_NEXT()
 end
 
-function level_cmd_unload_area()
+local function level_cmd_unload_area()
 	unload_area()
 	return CMD_NEXT()
 end
 
-function level_cmd_set_transition(transType, time, colorR, colorG, colorB)
+local function level_cmd_set_transition(transType, time, colorR, colorG, colorB)
 	if gCurrentArea ~= nil then
 		play_transition(transType, time, colorR, colorG, colorB)
 	end
