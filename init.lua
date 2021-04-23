@@ -109,6 +109,8 @@ require('sm64sf/src/game/area.lua')
 require('sm64sf/src/game/game_init.lua')
 --@include sm64sf/src/game/object_list_processor.lua
 require('sm64sf/src/game/object_list_processor.lua')
+--@include sm64sf/src/game/screen_transition.lua
+require('sm64sf/src/game/screen_transition.lua')
 
 --@include sm64sf/levels/intro/leveldata.lua
 require('sm64sf/levels/intro/leveldata.lua')
