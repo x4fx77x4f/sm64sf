@@ -168,7 +168,7 @@ local function level_cmd_create_instant_warp(index, destArea, displaceX, displac
 		if gAreas[sCurrAreaIndex].instantWarps == nil then
 			gAreas[sCurrAreaIndex].instantWarps = {{}, {}, {}, {}}
 			
-			for i=INSTANCE_WARP_INDEX_START, INSTANT_WARP_INDEX_STOP do
+			for i = INSTANCE_WARP_INDEX_START, INSTANT_WARP_INDEX_STOP do
 				gAreas[sCurrAreaIndex].instantWarps[i].id = 0
 			end
 		end
