@@ -166,18 +166,6 @@ hook.add('render', '', function()
 	render.setRenderTargetTexture('final')
 	render.drawTexturedRectUV(0, 63, 512, 384, 0, 0, 0.3125, 0.234375)
 	
-	-- material debug
-	--[[
-	render.setMaterial(intro_seg7_texture_07007EA0)
-	render.drawTexturedRect(0, 0, 32, 32)
-	render.setMaterial(intro_seg7_texture_070086A0)
-	render.drawTexturedRect(32, 0, 32, 32)
-	render.setMaterial(intro_seg7_texture_0700B4A0)
-	render.drawTexturedRect(64, 0, 128, 16)
-	render.setMaterial(intro_seg7_texture_0700C4A0)
-	render.drawTexturedRect(192, 0, 16, 16)
-	--]]
-	
 	-- debug text
 	dbgprintf2("fps: %d", fps)
 	dbgprintf2("quota: %d%%", math.ceil(quotaAverage()/quotaMax()*100))
