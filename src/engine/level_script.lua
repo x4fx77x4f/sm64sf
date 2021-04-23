@@ -26,6 +26,8 @@ function CMD_NEXT()
 end
 
 function level_cmd_load_and_execute(entry)
+	assertf(entry, "tried to execute null level script from %s at %d", _GR[sCurrentCmds], sCurrentCmdOffset)
+	
 	sStackTop = sStackTop
 	
 	sCurrentCmds = entry
@@ -34,6 +36,8 @@ function level_cmd_load_and_execute(entry)
 end
 
 function level_cmd_exit_and_execute(entry)
+	assertf(entry, "tried to execute null level script from %s at %d", _GR[sCurrentCmds], sCurrentCmdOffset)
+	
 	local targetAddr = entry
 	
 	sStackTop = sStackBase
@@ -287,7 +291,7 @@ function level_script_execute(cmds)
 		-- [[
 		assertf(
 			LevelScriptJumpTable[sCurrentCmd.type],
-			"no such level command 0x%02X at %d in %s", sCurrentCmd.type, sCurrentCmdOffset, tostring(sCurrentCmds)
+			"no such level command 0x%02X at %d in %s", sCurrentCmd.type, sCurrentCmdOffset, _GR[sCurrentCmds]
 		)(unpack(sCurrentCmd))
 		--]]
 		coroutine.yield()

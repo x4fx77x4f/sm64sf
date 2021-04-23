@@ -119,6 +119,11 @@ require('sm64sf/levels/intro/script.lua')
 --@include sm64sf/levels/entry.lua
 require('sm64sf/levels/entry.lua')
 
+_GR = setmetatable({}, {__mode='k'})
+for k, v in pairs(_G) do
+	_GR[v] = tostring(k)
+end
+
 local thread = coroutine.create(thread5_game_loop)
 
 local threshold = quotaMax()*0.5
@@ -176,7 +181,7 @@ hook.add('render', '', function()
 	-- debug text
 	dbgprintf2("fps: %d", fps)
 	dbgprintf2("quota: %d%%", math.ceil(quotaAverage()/quotaMax()*100))
-	dbgprintf("script: 0x%02X is %d at %d in %q", sCurrentCmd and sCurrentCmd.type or -1, sScriptStatus or -2, sCurrentCmdOffset or -1, tostring(sCurrentCmds) or "nil")
+	dbgprintf("script: 0x%02X is %d at %d in %s", sCurrentCmd and sCurrentCmd.type or -1, sScriptStatus or -2, sCurrentCmdOffset or -1, _GR[sCurrentCmds] or "nil")
 	-- [[
 	dbgStr = string.gsub(dbgStr, "\n$", "")
 	render.setFont('DebugFixed')
