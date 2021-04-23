@@ -41,7 +41,7 @@ LOAD_MODEL_FROM_DL = wrap(0x21)
 LOAD_MODEL_FROM_GEO = wrap(0x22)
 CMD23 = wrap(0x23)
 OBJECT_WITH_ACTS = wrap(0x24)
-function OBJECT(model, posX, posY, posZ, angleX, angleY, angleZ, behParam, beh)
+OBJECT = function(model, posX, posY, posZ, angleX, angleY, angleZ, behParam, beh)
 	return OBJECT_WITH_ACTS(model, posX, posY, posZ, angleX, angleY, angleZ, behParam, beh, 0x1F)
 end
 MARIO = wrap(0x25)

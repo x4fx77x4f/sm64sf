@@ -90,10 +90,14 @@ SF_PATH_PLACEHOLDER = file.existsTemp(hash) or file.writeTemp(hash, getScripts()
 -- point an impossible load order will be required, and when that
 -- happens, it's going to fucking suck.
 
---@include sm64sf/include/pr/gbi.lua
-require('sm64sf/include/pr/gbi.lua')
+--@include sm64sf/include/config.lua
+require('sm64sf/include/config.lua')
+--@include sm64sf/include/geo_commands.lua
+require('sm64sf/include/geo_commands.lua')
 --@include sm64sf/include/level_commands.lua
 require('sm64sf/include/level_commands.lua')
+--@include sm64sf/include/pr/gbi.lua
+require('sm64sf/include/pr/gbi.lua')
 
 --@include sm64sf/src/engine/level_script.lua
 require('sm64sf/src/engine/level_script.lua')
@@ -112,6 +116,8 @@ require('sm64sf/src/game/object_list_processor.lua')
 --@include sm64sf/src/game/screen_transition.lua
 require('sm64sf/src/game/screen_transition.lua')
 
+--@include sm64sf/levels/intro/geo.lua
+require('sm64sf/levels/intro/geo.lua')
 --@include sm64sf/levels/intro/leveldata.lua
 require('sm64sf/levels/intro/leveldata.lua')
 --@include sm64sf/levels/intro/script.lua
@@ -133,6 +139,13 @@ local frameTime = 1/30
 local fps = 0
 local frames = 0
 local frameExpire = timer.systime()+1
+
+local function scaleFit(w1, h1, w2, h2)
+	local scale = math.min(w1/w2, h1/h2)
+	local w, h = w2*scale, h2*scale
+	local x, y = (w1-w)/2, (h1-h)/2
+	return x, y, w, h
+end
 
 local bg = Color(31, 31, 31)
 render.createRenderTarget('screen')
@@ -164,11 +177,13 @@ hook.add('render', '', function()
 	
 	render.setRGBA(255, 255, 255, 255)
 	render.setRenderTargetTexture('final')
-	render.drawTexturedRectUV(0, 63, 512, 384, 0, 0, 0.3125, 0.234375)
+	local sw, sh = render.getResolution()
+	local x, y, w, h = scaleFit(sw, sh, SCREEN_WIDTH, SCREEN_HEIGHT)
+	render.drawTexturedRectUV(x, y, w, h, 0, 0, SCREEN_WIDTH/1024, SCREEN_HEIGHT/1024)
 	
 	-- debug text
-	dbgprintf2("fps: %d", fps)
-	dbgprintf2("quota: %d%%", math.ceil(quotaAverage()/quotaMax()*100))
+	dbgprintf("fps: %d", fps)
+	dbgprintf("quota: %d%%", math.ceil(quotaAverage()/quotaMax()*100))
 	dbgprintf("script: 0x%02X is %d at %d in %s", sCurrentCmd and sCurrentCmd.type or -1, sScriptStatus or -2, sCurrentCmdOffset or -1, _GR[sCurrentCmds] or "nil")
 	-- [[
 	dbgStr = string.gsub(dbgStr, "\n$", "")
