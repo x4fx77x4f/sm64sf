@@ -5,7 +5,7 @@ local gCurRootGraphNode
 local gGeoViews
 local gGeoNumViews -- length of gGeoViews array
 
-local gGeoLayoutStack = {}
+local gGeoLayoutStack = {[0]=0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 local gCurGraphNodeList = {}
 local gCurGraphNodeIndex
 local gGeoLayoutStackIndex -- similar to SP register in MIPS
@@ -17,6 +17,144 @@ gGeoLayoutCommandOffset = 1
 local function CMD_NEXT()
 	gGeoLayoutCommandOffset = gGeoLayoutCommandOffset+1
 	gGeoLayoutCommand = gGeoLayoutCommands[gGeoLayoutCommandOffset]
+end
+
+-- 0x01: Terminate geo layout
+local function geo_layout_cmd_end()
+	gGeoLayoutStackIndex = gGeoLayoutReturnIndex
+	gGeoLayoutStackIndex = gGeoLayoutStackIndex-1
+	gGeoLayoutReturnIndex = bit.band(gGeoLayoutStack[gGeoLayoutStackIndex], 0xFFFF)
+	gGeoLayoutStackIndex = gGeoLayoutStackIndex-1
+	gCurGraphNodeIndex = bit.rshift(gGeoLayoutStack[gGeoLayoutStackIndex], 16)
+	return CMD_NEXT()
+end
+
+-- 0x04: Open node
+local function geo_layout_cmd_open_node()
+	gCurGraphNodeList[gCurGraphNodeIndex + 1] = gCurGraphNodeList[gCurGraphNodeIndex]
+	gCurGraphNodeIndex = gCurGraphNodeIndex+1
+	return CMD_NEXT()
+end
+
+-- 0x05: Close node
+local function geo_layout_cmd_close_node()
+	gCurGraphNodeIndex = gCurGraphNodeIndex-1
+	return CMD_NEXT()
+end
+
+-- 0x08: Create a scene graph root node that specifies the viewport
+local function geo_layout_cmd_node_root(numEntries, x, y, width, height)
+	local graphNode
+	
+	-- number of entries to allocate for gGeoViews array
+	-- at least 2 are allocated by default
+	-- numEntries = 0x00: Mario face, 0x0A: all other levels
+	gGeoNumViews = numEntries + 2
+	
+	--graphNode = init_graph_node_root(gGraphNodePool, nil, 0, x, y, width, height)
+	graphNode, gGraphNodePool = {}, {}
+	
+	-- TODO: check type
+	gGeoViews = gGraphNodePool -- I'm hoping I can just ignore C memory management.
+	
+	graphNode.views = gGeoViews
+	graphNode.numViews = gGeoNumViews
+	
+	for i = 0, gGeoNumViews do
+		gGeoViews[i] = nil
+	end
+	
+	--register_scene_graph_node(graphNode.node)
+	
+	return CMD_NEXT()
+end
+
+-- 0x09: Create orthographic projection scene graph node
+local function geo_layout_cmd_node_ortho_projection(scale)
+	local graphNode
+	scale = scale / 100.0
+	
+	--graphNode = init_graph_node_ortho_projection(gGraphNodePool, nil, scale)
+	
+	--register_scene_graph_node(graphNode.node)
+	
+	return CMD_NEXT()
+end
+
+-- 0x0A: Create camera frustum scene graph node
+local function geo_layout_cmd_node_perspective(fov, near, far, func)
+	local graphNode
+	local frustumFunc = func
+	
+	--graphNode = init_graph_node_perspective(gGraphNodePool, nil, fov, near, far, frustumFunc, 0)
+	
+	--register_scene_graph_node(graphNode.fnNode.node)
+	
+	return CMD_NEXT()
+end
+
+-- 0x0C: Create zbuffer-toggling scene graph node
+local function geo_layout_cmd_node_master_list(enable)
+	local graphNode
+	
+	--graphNode = init_graph_node_master_list(gGraphNodePool, nil, enable)
+	
+	--register_scene_graph_node(graphNode.node)
+	
+	return CMD_NEXT()
+end
+
+-- 0x0F: Create a camera scene graph node (GraphNodeCamera). The focus sets the Camera's areaCen position.
+local function geo_layout_cmd_node_camera(type, x1, y1, z1, x2, y2, z2, func)
+	local graphNode
+	
+	local pos, focus
+	
+	pos = Vector(x1, y1, z1)
+	focus = Vector(x2, y2, z2)
+	
+	--[[graphNode = init_graph_node_camera(
+		gGraphNodePool, nil, pos, focus,
+		func, type
+	)
+	
+	register_scene_graph_node(graphNode.fnNode.node)
+	
+	gGeoViews[1] = graphNode.fnNode.node]]
+	
+	return CMD_NEXT()
+end
+
+-- 0x18: Create dynamically generated displaylist scene graph node
+local function geo_layout_cmd_node_generated(param, func)
+	local graphNode
+	
+	--[[graphNode = init_graph_node_generated(
+		gGraphNodePool, nil,
+		func, -- asm function
+		param -- parameter
+	)
+	
+	register_scene_graph_node(graphNode.fnNode.node)]]
+	
+	return CMD_NEXT()
+end
+
+-- 0x19: Create background scene graph node
+local function geo_layout_cmd_node_background(background, func)
+	local graphNode
+	
+	--[[
+	graphNode = init_graph_node_background(
+		gGraphNodePool, nil,
+		background, -- background ID, or RGBA5551 color if asm function is null
+		func, -- asm function
+		0
+	)
+	
+	register_scene_graph_node(graphNode.fnNode.node)]]
+	
+	return CMD_NEXT()
 end
 
 local GeoLayoutJumpTable = {
@@ -87,4 +225,7 @@ function process_geo_layout(pool, segptr)
 		--]]
 		coroutine.yield()
 	end
+	
+	gCurRootGraphNode = gCurRootGraphNode or {views={}}
+	return gCurRootGraphNode
 end

@@ -7,8 +7,11 @@ sIntroFrameCounter = nil
 sTmCopyrightAlpha = nil
 
 -- Geo callback to render the "Super Mario 64" logo on the title screen
-function geo_intro_super_mario_64_logo(state)
-	local scaleMat
+function geo_intro_super_mario_64_logo(state, node, context)
+	local graphNode = node
+	local dl = nil
+	local dlIter = nil
+	local scaleMat = Matrix()
 	local scaleTable1 = intro_seg7_table_0700C790
 	local scaleTable2 = intro_seg7_table_0700C880
 	local scaleX
@@ -42,11 +45,15 @@ function geo_intro_super_mario_64_logo(state)
 			scaleY = 0
 			scaleZ = 0
 		end
-		scaleMat:setScale(Vector(scaleX, scaleY, scaleZ))
+		--guScale(scaleMat, scaleX, scaleY, scaleZ)
 		
-		render.pushMatrix(scaleMat)
-		intro_seg7_dl_0700B3A0() -- draw model
-		render.popMatrix()
+		--gSPMatrix(scaleMat, bit.bor(bit.bor(G_MTX_MODELVIEW, G_MTX_MUL), G_MTX_PUSH))
+		--gSPDisplayList(intro_seg7_dl_0700B3A0) -- draw model
+		--gSPPopMatrix(G_MTX_MODELVIEW)
+		--gSPEndDisplayList()
+		
+		render.setFont('DermaLarge')
+		render.drawSimpleText(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, "geo_intro_super_mario_64_logo", 1, 1)
 		
 		sIntroFrameCounter = sIntroFrameCounter+1
 	end
