@@ -687,7 +687,7 @@ function gDPSetTextureImage(displaylist, format, size, width, imageData)
 	})
 end
 
-function gDPLoadBlock(displaylist, tile, uls, ult, lrs) ///dxt skipped
+function gDPLoadBlock(displaylist, tile, uls, ult, lrs) -- dxt skipped
 	table.insert(displaylist, {
 		words = {
 			w0 = G_LOADBLOCK,
