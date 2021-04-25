@@ -144,7 +144,23 @@ for k, v in pairs(_G) do
 	_GR[v] = tostring(k)
 end
 
-local thread = coroutine.create(thread5_game_loop) -- this ought to be main_func...
+local thread = coroutine.create(function()
+	-- Use 'xpcall' so that Starfall's unprotected coroutine.resume
+	-- doesn't get to lose our precious stack trace.
+	return xpcall(
+		thread5_game_loop, -- this ought to be main_func...
+		function(err, st)
+			err = type(err) == 'table' and err.message or err -- Fuck off, Starfall
+			pcall(printMessage, 2,
+				"-----BEGIN ERROR OUTPUT BLOCK-----\n"..
+				err.."\n"..
+				st.."\n"..
+				"-----END ERROR OUTPUT BLOCK-----\n"
+			)
+			error(err)
+		end
+	)
+end)
 
 local threshold = quotaMax()*0.5
 local waitUntil = 0
