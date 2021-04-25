@@ -1,3 +1,5 @@
+local gGfxPool = {}
+
 gGlobalTimer = 0 -- u32
 
 frameBufferIndex = 0 -- u16
@@ -16,7 +18,7 @@ end
 
 -- Clears the framebuffer, allowing it to be overwritten.
 function clear_frame_buffer(color)
-	return render.clear(color, false)
+	
 end
 
 -- Clears and initializes the viewport.
@@ -31,8 +33,10 @@ function init_render_image()
 end
 
 function rendering_init()
+	gGfxPool = gGfxPools[1]
 	init_render_image()
-	clear_frame_buffer(Color(0, 0, 0))
+	clear_frame_buffer(0)
+	send_display_list(gGfxPool.spTask)
 	
 	frameBufferIndex = frameBufferIndex+1
 	gGlobalTimer = gGlobalTimer+1

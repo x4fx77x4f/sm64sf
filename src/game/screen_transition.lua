@@ -22,10 +22,32 @@ local function set_transition_color_fade_alpha(fadeType, fadeTimer, transTime)
 	end
 end
 
+local function vertex_transition_color(transData, alpha)
+	local verts = Vtx(4)
+	local r = transData.red
+	local g = transData.green
+	local b = transData.blue
+	
+	if verts ~= nil then
+		make_vertex(verts, 1, GFX_DIMENSIONS_FROM_LEFT_EDGE(0), 0, -1, 0, 0, r, g, b, alpha)
+		make_vertex(verts, 2, GFX_DIMENSIONS_FROM_RIGHT_EDGE(0), 0, -1, 0, 0, r, g, b, alpha)
+		make_vertex(verts, 3, GFX_DIMENSIONS_FROM_RIGHT_EDGE(0), SCREEN_HEIGHT, -1, 0, 0, r, g, b, alpha)
+		make_vertex(verts, 4, GFX_DIMENSIONS_FROM_LEFT_EDGE(0), SCREEN_HEIGHT, -1, 0, 0, r, g, b, alpha)
+	end
+	return verts
+end
+
 local function dl_transition_color(fadeTimer, transTime, transData, alpha)
-	--render.setRGBA(transData.red, transData.green, transData.green, alpha)
-	render.setRGBA(255, 0, 0, alpha)
-	render.drawRect(0, 0, 320, 240)
+	local verts = vertex_transition_color(transData, alpha)
+	
+	if verts ~= nil then
+		gSPDisplayList(dl_proj_mtx_fullscreen)
+		gDPSetCombineMode(G_CC_SHADE, G_CC_SHADE)
+		gDPSetRenderMode(G_RM_AA_XLU_SURF, G_RM_AA_XLU_SURF2)
+		gSPVertex(verts, 4, 0)
+		gSPDisplayList(dl_draw_quad_verts_0123)
+		gSPDisplayList(dl_screen_transition_end)
+	end
 	return set_and_reset_transition_fade_timer(fadeTimer, transTime)
 end
 

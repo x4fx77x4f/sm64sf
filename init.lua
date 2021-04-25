@@ -90,14 +90,22 @@ SF_PATH_PLACEHOLDER = file.existsTemp(hash) or file.writeTemp(hash, getScripts()
 -- point an impossible load order will be required, and when that
 -- happens, it's going to fucking suck.
 
+--@include sm64sf/rdp.lua
+require('sm64sf/rdp.lua')
+
 --@include sm64sf/include/config.lua
 require('sm64sf/include/config.lua')
 --@include sm64sf/include/geo_commands.lua
 require('sm64sf/include/geo_commands.lua')
+--@include sm64sf/include/gfx_dimensions.lua
+require('sm64sf/include/gfx_dimensions.lua')
 --@include sm64sf/include/level_commands.lua
 require('sm64sf/include/level_commands.lua')
 --@include sm64sf/include/pr/gbi.lua
 require('sm64sf/include/pr/gbi.lua')
+
+--@include sm64sf/src/buffers/buffers.lua
+require('sm64sf/src/buffers/buffers.lua')
 
 --@include sm64sf/src/engine/geo_layout.lua
 require('sm64sf/src/engine/geo_layout.lua')
@@ -113,6 +121,10 @@ require('sm64sf/src/menu/level_select_menu.lua')
 require('sm64sf/src/game/area.lua')
 --@include sm64sf/src/game/game_init.lua
 require('sm64sf/src/game/game_init.lua')
+--@include sm64sf/src/game/geo_misc.lua
+require('sm64sf/src/game/geo_misc.lua')
+--@include sm64sf/src/game/main.lua
+require('sm64sf/src/game/main.lua')
 --@include sm64sf/src/game/object_list_processor.lua
 require('sm64sf/src/game/object_list_processor.lua')
 --@include sm64sf/src/game/screen_transition.lua
@@ -132,7 +144,7 @@ for k, v in pairs(_G) do
 	_GR[v] = tostring(k)
 end
 
-local thread = coroutine.create(thread5_game_loop)
+local thread = coroutine.create(thread5_game_loop) -- this ought to be main_func...
 
 local threshold = quotaMax()*0.5
 local waitUntil = 0
