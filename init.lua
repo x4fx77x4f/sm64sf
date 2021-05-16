@@ -178,49 +178,78 @@ local function scaleFit(w1, h1, w2, h2)
 end
 
 local bg = Color(31, 31, 31)
-render.createRenderTarget('screen')
-render.createRenderTarget('final')
+local perms = {'file.writeTemp', 'render.screen'}
+local function init(initial)
+	local hasPerm = true
+	for _, perm in pairs(perms) do
+		if not hasPermission(perm) then
+			hasPerm = false
+			pcall(setupPermissionRequest, perms, "Necessary", true)
+			return
+		end
+	end
+	if initial and player() ~= owner() then
+		return
+	end
+	
+	render.createRenderTarget('screen')
+	render.createRenderTarget('final')
+	hook.add('render', '', function()
+		render.setBackgroundColor(bg)
+		--render.setFilterMag(TEXFILTER.POINT)
+		--render.setFilterMin(TEXFILTER.POINT)
+		
+		dbgStr, dbgStrLines = "", 0
+		
+		local now = timer.systime()
+		if now >= frameExpire then
+			fps = frames
+			frames = 0
+			frameExpire = now+1
+		end
+		if now >= waitUntil then
+			render.selectRenderTarget('screen')
+				while quotaUsed() < threshold do
+					if coroutine.resume(thread) then
+						frames = frames+1
+						break
+					end
+				end
+				waitUntil = now+frameTime
+			render.selectRenderTarget()
+		end
+		
+		render.setRGBA(255, 255, 255, 255)
+		render.setRenderTargetTexture('final')
+		local sw, sh = render.getResolution()
+		local x, y, w, h = scaleFit(sw, sh, SCREEN_WIDTH, SCREEN_HEIGHT)
+		render.drawTexturedRectUV(x, y, w, h, 0, 0, SCREEN_WIDTH/1024, SCREEN_HEIGHT/1024)
+		
+		-- debug text
+		dbgprintf("fps: %d", fps)
+		dbgprintf("quota: %d%%", math.ceil(quotaAverage()/quotaMax()*100))
+		dbgprintf("script: 0x%02X is %d at %d in %s", sCurrentCmd and sCurrentCmd.type or -1, sScriptStatus or -2, sCurrentCmdOffset or -1, _GR[sCurrentCmds] or "nil")
+		-- [[
+		dbgStr = string.gsub(dbgStr, "\n$", "")
+		render.setFont('DebugFixed')
+		render.setRGBA(0, 0, 0, 255)
+		render.drawRectFast(0, 0, render.getTextSize(dbgStr))
+		render.setRGBA(255, 255, 255, 255)
+		render.drawText(0, 0, dbgStr)
+		--]]
+	end)
+end
 hook.add('render', '', function()
 	render.setBackgroundColor(bg)
-	--render.setFilterMag(TEXFILTER.POINT)
-	--render.setFilterMin(TEXFILTER.POINT)
-	
-	dbgStr, dbgStrLines = "", 0
-	
-	local now = timer.systime()
-	if now >= frameExpire then
-		fps = frames
-		frames = 0
-		frameExpire = now+1
-	end
-	if now >= waitUntil then
-		render.selectRenderTarget('screen')
-			while quotaUsed() < threshold do
-				if coroutine.resume(thread) then
-					frames = frames+1
-					break
-				end
-			end
-			waitUntil = now+frameTime
-		render.selectRenderTarget()
-	end
-	
-	render.setRGBA(255, 255, 255, 255)
-	render.setRenderTargetTexture('final')
-	local sw, sh = render.getResolution()
-	local x, y, w, h = scaleFit(sw, sh, SCREEN_WIDTH, SCREEN_HEIGHT)
-	render.drawTexturedRectUV(x, y, w, h, 0, 0, SCREEN_WIDTH/1024, SCREEN_HEIGHT/1024)
-	
-	-- debug text
-	dbgprintf("fps: %d", fps)
-	dbgprintf("quota: %d%%", math.ceil(quotaAverage()/quotaMax()*100))
-	dbgprintf("script: 0x%02X is %d at %d in %s", sCurrentCmd and sCurrentCmd.type or -1, sScriptStatus or -2, sCurrentCmdOffset or -1, _GR[sCurrentCmds] or "nil")
-	-- [[
-	dbgStr = string.gsub(dbgStr, "\n$", "")
-	render.setFont('DebugFixed')
-	render.setRGBA(0, 0, 0, 255)
-	render.drawRectFast(0, 0, render.getTextSize(dbgStr))
-	render.setRGBA(255, 255, 255, 255)
-	render.drawText(0, 0, dbgStr)
-	--]]
+	render.setFont('DermaDefault')
+	render.drawText(10, 10, "Press E on screen to activate\n\nNOTE: Extremely early in development,\nit does not do very much right now")
 end)
+hook.add('starfallUsed', 'consent', function(activator, used)
+	if activator ~= player() then
+		return
+	end
+	hook.remove('starfallUsed', 'consent')
+	init()
+end)
+hook.add('permissionrequest', 'consent', init)
+init(true)
