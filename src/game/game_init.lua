@@ -32,6 +32,17 @@ function init_render_image()
 	display_frame_buffer()
 end
 
+-- Ends the master display list.
+function end_master_display_list()
+	--draw_screen_borders()
+	if gShowProfiler then
+		draw_profiler()
+	end
+	
+	--gDPFullSync()
+	gSPEndDisplayList()
+end
+
 function rendering_init()
 	gGfxPool = gGfxPools[1]
 	init_render_image()
