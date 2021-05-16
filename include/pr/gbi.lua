@@ -423,8 +423,8 @@ function gdSPDefLights1(ar, ag, ab, r1, g1, b1, x1, y1, z1)
 	}
 end
 
-function gSPLight(displaylist, lightData, index)
-	table.insert(displaylist, {
+function gSPLight(lightData, index)
+	table.insert(gDisplayList, {
 		words = {
 			w0 = G_MOVEMEM,
 			w1 = {type = G_MV_L, data = lightData, index = index - 1}
@@ -433,8 +433,8 @@ function gSPLight(displaylist, lightData, index)
 	})
 end
 
-function gSPNumLights(displaylist, num)
-	table.insert(displaylist, {
+function gSPNumLights(num)
+	table.insert(gDisplayList, {
 		words = {
 			w0 = G_MOVEWORD,
 			w1 = {type = G_MW_NUMLIGHT, data = num + 1} -- includes 1 ambient light
@@ -442,8 +442,8 @@ function gSPNumLights(displaylist, num)
 	})
 end
 
-function gSPFogFactor(displaylist, f_mul, f_offset)
-	table.insert(displaylist, {
+function gSPFogFactor(f_mul, f_offset)
+	table.insert(gDisplayList, {
 		words = {
 			w0 = G_MOVEWORD,
 			w1 = {
@@ -457,8 +457,8 @@ function gSPFogFactor(displaylist, f_mul, f_offset)
 	})
 end
 
-function gSPFogPosition(displaylist, min, max)
-	table.insert(displaylist, {
+function gSPFogPosition(min, max)
+	table.insert(gDisplayList, {
 		words = {
 			w0 = G_MOVEWORD,
 			w1 = {
@@ -472,8 +472,8 @@ function gSPFogPosition(displaylist, min, max)
 	})
 end
 
-function gDPSetFogColor(displaylist, r, g, b, a)
-	table.insert(displaylist, {
+function gDPSetFogColor(r, g, b, a)
+	table.insert(gDisplayList, {
 		words = {
 			w0 = G_SETFOGCOLOR,
 			w1 = {r, g, b, a}
@@ -481,8 +481,8 @@ function gDPSetFogColor(displaylist, r, g, b, a)
 	})
 end
 
-function gDPSetEnvColor(displaylist, r, g, b, a)
-	table.insert(displaylist, {
+function gDPSetEnvColor(r, g, b, a)
+	table.insert(gDisplayList, {
 		words = {
 			w0 = G_SETENVCOLOR,
 			w1 = {r, g, b, a}
@@ -490,8 +490,8 @@ function gDPSetEnvColor(displaylist, r, g, b, a)
 	})
 end
 
-function gDPSetFillColor(displaylist, color)
-	table.insert(displaylist, {
+function gDPSetFillColor(color)
+	table.insert(gDisplayList, {
 		words = {
 			w0 = G_SETFILLCOLOR,
 			w1 = {color}
@@ -499,8 +499,8 @@ function gDPSetFillColor(displaylist, color)
 	})
 end
 
-function gDPFillRectangle(displaylist, ulx, uly, lrx, lry)
-	table.insert(displaylist, {
+function gDPFillRectangle(ulx, uly, lrx, lry)
+	table.insert(gDisplayList, {
 		words = {
 			w0 = G_FILLRECT,
 			w1 = {ulx, uly, lrx, lry}
@@ -508,8 +508,8 @@ function gDPFillRectangle(displaylist, ulx, uly, lrx, lry)
 	})
 end
 
-function gSPTextureRectangle(displaylist, ulx, uly, lrx, lry, tile, uls, ult, dsdx, dtdy)
-	table.insert(displaylist, {
+function gSPTextureRectangle(ulx, uly, lrx, lry, tile, uls, ult, dsdx, dtdy)
+	table.insert(gDisplayList, {
 		words = {
 			w0 = G_TEXRECT,
 			w1 = {ulx, uly, lrx, lry, tile, uls, ult, dsdx, dtdy}
@@ -517,8 +517,8 @@ function gSPTextureRectangle(displaylist, ulx, uly, lrx, lry, tile, uls, ult, ds
 	})
 end
 
-function gSPTextureRectangleFlip(displaylist, ulx, uly, lrx, lry, tile, uls, ult, dsdx, dtdy)
-	table.insert(displaylist, {
+function gSPTextureRectangleFlip(ulx, uly, lrx, lry, tile, uls, ult, dsdx, dtdy)
+	table.insert(gDisplayList, {
 		words = {
 			w0 = G_FILLRECTFLIP,
 			w1 = {ulx, uly, lrx, lry, tile, uls, ult, dsdx, dtdy}
@@ -526,8 +526,8 @@ function gSPTextureRectangleFlip(displaylist, ulx, uly, lrx, lry, tile, uls, ult
 	})
 end
 
-function gSPTexture(displaylist, s, t, level, tile, on)
-	table.insert(displaylist, {
+function gSPTexture(s, t, level, tile, on)
+	table.insert(gDisplayList, {
 		words = {
 			w0 = G_TEXTURE,
 			w1 = {s, t}
@@ -535,8 +535,8 @@ function gSPTexture(displaylist, s, t, level, tile, on)
 	})
 end
 
-function gDPSetCombineMode(displaylist, mode)
-	table.insert(displaylist, {
+function gDPSetCombineMode(mode)
+	table.insert(gDisplayList, {
 		words = {
 			w0 = G_SETCOMBINE,
 			w1 = {mode}
@@ -544,8 +544,8 @@ function gDPSetCombineMode(displaylist, mode)
 	})
 end
 
-function gDPSetTileSize(displaylist, t, uls, ult, lrs, lrt)
-	table.insert(displaylist, {
+function gDPSetTileSize(t, uls, ult, lrs, lrt)
+	table.insert(gDisplayList, {
 		words = {
 			w0 = G_SETTILESIZE,
 			w1 = {t, uls, ult, lrs, lrt}
@@ -553,8 +553,8 @@ function gDPSetTileSize(displaylist, t, uls, ult, lrs, lrt)
 	})
 end
 
-function gDPSetHilite1Tile(displaylist, tile, hilite, width, height)
-	gDPSetTileSize(displaylist, tile,
+function gDPSetHilite1Tile(tile, hilite, width, height)
+	gDPSetTileSize(tile,
 		bit.band(hilite.x1, 0xfff),
 		bit.band(hilite.y1, 0xfff),
 		bit.band((((width - 1) * 4) + hilite.x1), 0xfff),
@@ -562,8 +562,8 @@ function gDPSetHilite1Tile(displaylist, tile, hilite, width, height)
 	)
 end
 
-function gSPMatrix(displaylist, matrix, parameters)
-	table.insert(displaylist, {
+function gSPMatrix(matrix, parameters)
+	table.insert(gDisplayList, {
 		words = {
 			w0 = G_MTX,
 			w1 = {matrix, parameters}
@@ -571,16 +571,16 @@ function gSPMatrix(displaylist, matrix, parameters)
 	})
 end
 
-function gDPSetRenderMode(displaylist, mode)
-	table.insert(displaylist, {
+function gDPSetRenderMode(mode)
+	table.insert(gDisplayList, {
 		words = {
 			w0 = G_SETOTHERMODE_L,
 			w1 = {mode}
 		}
 	})
 end
-function gDPSetTextureFilter(displaylist, newmode)
-	table.insert(displaylist, {
+function gDPSetTextureFilter(newmode)
+	table.insert(gDisplayList, {
 		words = {
 			w0 = G_SETOTHERMODE_H,
 			w1 = {category = G_MDSFT_TEXTFILT, newmode}
@@ -588,8 +588,8 @@ function gDPSetTextureFilter(displaylist, newmode)
 	})
 end
 
-function gDPSetCycleType(displaylist, newmode)
-	table.insert(displaylist, {
+function gDPSetCycleType(newmode)
+	table.insert(gDisplayList, {
 		words = {
 			w0 = G_SETOTHERMODE_H,
 			w1 = {category = G_MDSFT_CYCLETYPE, newmode}
@@ -597,8 +597,8 @@ function gDPSetCycleType(displaylist, newmode)
 	})
 end
 
-function gSPVertex(displaylist, vertices, num_vertices, dest_index)
-	table.insert(displaylist, {
+function gSPVertex(vertices, num_vertices, dest_index)
+	table.insert(gDisplayList, {
 		words = {
 			w0 = G_VTX,
 			w1 = {vertices, dest_index}
@@ -606,8 +606,8 @@ function gSPVertex(displaylist, vertices, num_vertices, dest_index)
 	})
 end
 
-function gSP1Triangle(displaylist, v0, v1, v2, flag)
-	table.insert(displaylist, {
+function gSP1Triangle(v0, v1, v2, flag)
+	table.insert(gDisplayList, {
 		words = {
 			w0 = G_TRI1,
 			w1 = {v0, v1, v2, flag}
@@ -615,8 +615,8 @@ function gSP1Triangle(displaylist, v0, v1, v2, flag)
 	})
 end
 
-function gSPViewport(displaylist, viewportData)
-	table.insert(displaylist, {
+function gSPViewport(viewportData)
+	table.insert(gDisplayList, {
 		words = {
 			w0 = G_MOVEMEM,
 			w1 = {type = G_MV_VIEWPORT, data = viewportData}
@@ -624,8 +624,8 @@ function gSPViewport(displaylist, viewportData)
 	})
 end
 
-function gDPSetPrimColor(displaylist, m, l, r, g, b, a)
-	table.insert(displaylist, {
+function gDPSetPrimColor(m, l, r, g, b, a)
+	table.insert(gDisplayList, {
 		words = {
 			w0 = G_SETPRIMCOLOR,
 			w1 = {m, l, r, g, b, a}
@@ -634,8 +634,8 @@ function gDPSetPrimColor(displaylist, m, l, r, g, b, a)
 end
 
 
-function gSPSetGeometryMode(displaylist, mode)
-	table.insert(displaylist, {
+function gSPSetGeometryMode(mode)
+	table.insert(gDisplayList, {
 		words = {
 			w0 = G_SETGEOMETRYMODE,
 			w1 = {mode}
@@ -643,8 +643,8 @@ function gSPSetGeometryMode(displaylist, mode)
 	})
 end
 
-function gSPClearGeometryMode(displaylist, mode)
-	table.insert(displaylist, {
+function gSPClearGeometryMode(mode)
+	table.insert(gDisplayList, {
 		words = {
 			w0 = G_CLEARGEOMETRYMODE,
 			w1 = {mode}
@@ -653,15 +653,15 @@ function gSPClearGeometryMode(displaylist, mode)
 end
 
 function gSPEndDisplayList(displaylist)
-	table.insert(displaylist, {
+	table.insert(gDisplayList, {
 		words = {
 			w0 = G_ENDDL
 		}
 	})
 end
 
-function gSPBranchList(displaylist, childDisplayList)
-	table.insert(displaylist, {
+function gSPBranchList(childDisplayList)
+	table.insert(gDisplayList, {
 		words = {
 			w0 = G_DL,
 			w1 = {childDisplayList, branch = G_DL_NOPUSH}
@@ -669,8 +669,8 @@ function gSPBranchList(displaylist, childDisplayList)
 	})
 end
 
-function gSPDisplayList(displaylist, childDisplayList)
-	table.insert(displaylist, {
+function gSPDisplayList(childDisplayList)
+	table.insert(gDisplayList, {
 		words = {
 			w0 = G_DL,
 			w1 = {childDisplayList, branch = G_DL_PUSH}
@@ -678,8 +678,8 @@ function gSPDisplayList(displaylist, childDisplayList)
 	})
 end
 
-function gDPSetTextureImage(displaylist, format, size, width, imageData)
-	table.insert(displaylist, {
+function gDPSetTextureImage(format, size, width, imageData)
+	table.insert(gDisplayList, {
 		 words = {
 			w0 = G_SETTIMG,
 			w1 = {format, size, width, imageData}
@@ -687,8 +687,8 @@ function gDPSetTextureImage(displaylist, format, size, width, imageData)
 	})
 end
 
-function gDPLoadBlock(displaylist, tile, uls, ult, lrs) -- dxt skipped
-	table.insert(displaylist, {
+function gDPLoadBlock(tile, uls, ult, lrs) -- dxt skipped
+	table.insert(gDisplayList, {
 		words = {
 			w0 = G_LOADBLOCK,
 			w1 = {tile, uls, ult, lrs}
@@ -697,16 +697,16 @@ function gDPLoadBlock(displaylist, tile, uls, ult, lrs) -- dxt skipped
 end
 
 
-function gDPLoadBlockTexture(displaylist, width, height, format, image)
-	table.insert(displaylist,
+function gDPLoadBlockTexture(width, height, format, image)
+	table.insert(gDisplayList,
 		gsDPSetTextureImage(format, G_IM_SIZ_16b, 1, image),
 		gsDPSetTile(format, G_IM_SIZ_16b, 0, 0, G_TX_LOADTILE, 0, G_TX_NOMIRROR, G_TX_NOMASK, G_TX_NOLOD, G_TX_NOMIRROR, G_TX_NOMASK, G_TX_NOLOD),
 		gsDPLoadBlock(G_TX_LOADTILE, 0, 0, (width * height) - 1)
 	)
 end
 
-function gDPLoadTextureBlock(displaylist, timg, fmt, siz, width, height, pal, cms, cmt, masks, maskt, shifts, shiftt)
-	table.insert(displaylist,
+function gDPLoadTextureBlock(timg, fmt, siz, width, height, pal, cms, cmt, masks, maskt, shifts, shiftt)
+	table.insert(gDisplayList,
 		gsDPSetTextureImage(fmt, G_IM_SIZ_LOAD_BLOCK_TABLE[siz], 1, timg),
 		gsDPSetTile(fmt, G_IM_SIZ_LOAD_BLOCK_TABLE[siz], 0, 0, G_TX_LOADTILE, 0, cmt, maskt, shiftt, cms, masks, shifts),
 		gsDPLoadBlock(G_TX_LOADTILE, 0, 0, bit.rshift(((width) * (height) + G_IM_SIZ_INCR_TABLE[siz]), G_IM_SIZ_SHIFT_TABLE[siz]) - 1),
