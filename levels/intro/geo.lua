@@ -1,5 +1,5 @@
 -- 0x0E0002D0
-intro_geo_0002D0 = {
+intro_geo_0002D0 = {[0]=
 	GEO_NODE_SCREEN_AREA(0, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH/2, SCREEN_HEIGHT/2),
 	GEO_OPEN_NODE(),
 		GEO_ZBUFFER(0),
@@ -28,7 +28,7 @@ intro_geo_0002D0 = {
 }
 
 -- 0x0E00035C
-intro_geo_mario_head_regular = {
+intro_geo_mario_head_regular = {[0]=
 	GEO_NODE_SCREEN_AREA(0, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH/2, SCREEN_HEIGHT/2),
 	GEO_OPEN_NODE(),
 		GEO_ZBUFFER(0),
@@ -50,7 +50,7 @@ intro_geo_mario_head_regular = {
 }
 
 -- 0x0E0003B8
-intro_geo_mario_head_dizzy = {
+intro_geo_mario_head_dizzy = {[0]=
 	GEO_NODE_SCREEN_AREA(0, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH/2, SCREEN_HEIGHT/2),
 	GEO_OPEN_NODE(),
 		GEO_ZBUFFER(0),
@@ -72,7 +72,7 @@ intro_geo_mario_head_dizzy = {
 }
 
 -- 0x0E000414
-intro_geo_000414 = {
+intro_geo_000414 = {[0]=
 	GEO_NODE_SCREEN_AREA(0, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH/2, SCREEN_HEIGHT/2),
 	GEO_OPEN_NODE(),
 		GEO_ZBUFFER(0),

@@ -1,3 +1,5 @@
+-- Deprecated; go to src/game/game.lua
+
 local gGfxPool = {}
 
 gGlobalTimer = 0 -- u32

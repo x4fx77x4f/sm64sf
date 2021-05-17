@@ -1,4 +1,4 @@
-level_script_entry = {
+level_script_entry = {[0]=
 	INIT_LEVEL(),
 	SLEEP(2),
 	BLACKOUT(false),

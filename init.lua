@@ -21,7 +21,6 @@ function boobytrap(...)
 		return error(msg)
 	end
 end
-local dbgStr
 function dbgprintf(...)
 	dbgStr = dbgStr..sprintf(...).."\n"
 end
@@ -86,98 +85,25 @@ end
 local hash = SF_PATH_HASH('/placeholder.png')
 SF_PATH_PLACEHOLDER = file.existsTemp(hash) or file.writeTemp(hash, getScripts()['sm64sf/placeholder.png'])
 
--- Load order is going to become a problem. I have no doubt that at some
--- point an impossible load order will be required, and when that
--- happens, it's going to fucking suck.
-
---@include sm64sf/rdp.lua
-require('sm64sf/rdp.lua')
-
---@include sm64sf/include/config.lua
-require('sm64sf/include/config.lua')
---@include sm64sf/include/geo_commands.lua
-require('sm64sf/include/geo_commands.lua')
---@include sm64sf/include/gfx_dimensions.lua
-require('sm64sf/include/gfx_dimensions.lua')
---@include sm64sf/include/level_commands.lua
-require('sm64sf/include/level_commands.lua')
---@include sm64sf/include/pr/gbi.lua
-require('sm64sf/include/pr/gbi.lua')
-
---@include sm64sf/src/buffers/buffers.lua
-require('sm64sf/src/buffers/buffers.lua')
-
---@include sm64sf/src/engine/geo_layout.lua
-require('sm64sf/src/engine/geo_layout.lua')
---@include sm64sf/src/engine/level_script.lua
-require('sm64sf/src/engine/level_script.lua')
-
---@include sm64sf/src/menu/intro_geo.lua
-require('sm64sf/src/menu/intro_geo.lua')
---@include sm64sf/src/menu/level_select_menu.lua
-require('sm64sf/src/menu/level_select_menu.lua')
-
---@include sm64sf/src/game/area.lua
-require('sm64sf/src/game/area.lua')
---@include sm64sf/src/game/game_init.lua
-require('sm64sf/src/game/game_init.lua')
---@include sm64sf/src/game/geo_misc.lua
-require('sm64sf/src/game/geo_misc.lua')
---@include sm64sf/src/game/main.lua
-require('sm64sf/src/game/main.lua')
---@include sm64sf/src/game/object_list_processor.lua
-require('sm64sf/src/game/object_list_processor.lua')
---@include sm64sf/src/game/screen_transition.lua
-require('sm64sf/src/game/screen_transition.lua')
-
---@include sm64sf/levels/intro/geo.lua
-require('sm64sf/levels/intro/geo.lua')
---@include sm64sf/levels/intro/leveldata.lua
-require('sm64sf/levels/intro/leveldata.lua')
---@include sm64sf/levels/intro/script.lua
-require('sm64sf/levels/intro/script.lua')
---@include sm64sf/levels/entry.lua
-require('sm64sf/levels/entry.lua')
-
-_GR = setmetatable({}, {__mode='k'})
-for k, v in pairs(_G) do
-	_GR[v] = tostring(k)
+function SF_BOR(...)
+	local n = 0
+	for i=1, select('#', ...) do
+		n = bit.bor(n, select(i, ...))
+	end
+	return n
 end
 
-local thread = coroutine.create(function()
-	-- Use 'xpcall' so that Starfall's unprotected coroutine.resume
-	-- doesn't get to lose our precious stack trace.
-	return xpcall(
-		thread5_game_loop, -- this ought to be main_func...
-		function(err, st)
-			err = type(err) == 'table' and err.message or err -- Fuck off, Starfall
-			pcall(printMessage, 2,
-				"-----BEGIN ERROR OUTPUT BLOCK-----\n"..
-				err.."\n"..
-				st.."\n"..
-				"-----END ERROR OUTPUT BLOCK-----\n"
-			)
-			error(err)
+-- https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign
+function table.assign(target, ...)
+	for i=1, select('#', ...) do
+		local source = select(i, ...)
+		for k, v in pairs(source) do
+			target[k] = v
 		end
-	)
-end)
-
-local threshold = quotaMax()*0.5
-local waitUntil = 0
-local frameTime = 1/30
-
-local fps = 0
-local frames = 0
-local frameExpire = timer.systime()+1
-
-local function scaleFit(w1, h1, w2, h2)
-	local scale = math.min(w1/w2, h1/h2)
-	local w, h = w2*scale, h2*scale
-	local x, y = (w1-w)/2, (h1-h)/2
-	return x, y, w, h
+	end
+	return target
 end
 
-local bg = Color(31, 31, 31)
 local perms = {'file.writeTemp', 'render.screen'}
 local function init(initial)
 	local hasPerm = true
@@ -191,55 +117,72 @@ local function init(initial)
 	if initial and player() ~= owner() then
 		return
 	end
+	hook.remove('render', 'consent')
+	hook.remove('starfallUsed', 'consent')
+	hook.remove('permissionrequest', 'consent')
 	
-	render.createRenderTarget('screen')
-	render.createRenderTarget('final')
-	hook.add('render', '', function()
-		render.setBackgroundColor(bg)
-		--render.setFilterMag(TEXFILTER.POINT)
-		--render.setFilterMin(TEXFILTER.POINT)
-		
-		dbgStr, dbgStrLines = "", 0
-		
-		local now = timer.systime()
-		if now >= frameExpire then
-			fps = frames
-			frames = 0
-			frameExpire = now+1
-		end
-		if now >= waitUntil then
-			render.selectRenderTarget('screen')
-				while quotaUsed() < threshold do
-					if coroutine.resume(thread) then
-						frames = frames+1
-						break
-					end
-				end
-				waitUntil = now+frameTime
-			render.selectRenderTarget()
-		end
-		
-		render.setRGBA(255, 255, 255, 255)
-		render.setRenderTargetTexture('final')
-		local sw, sh = render.getResolution()
-		local x, y, w, h = scaleFit(sw, sh, SCREEN_WIDTH, SCREEN_HEIGHT)
-		render.drawTexturedRectUV(x, y, w, h, 0, 0, SCREEN_WIDTH/1024, SCREEN_HEIGHT/1024)
-		
-		-- debug text
-		dbgprintf("fps: %d", fps)
-		dbgprintf("quota: %d%%", math.ceil(quotaAverage()/quotaMax()*100))
-		dbgprintf("script: 0x%02X is %d at %d in %s", sCurrentCmd and sCurrentCmd.type or -1, sScriptStatus or -2, sCurrentCmdOffset or -1, _GR[sCurrentCmds] or "nil")
-		-- [[
-		dbgStr = string.gsub(dbgStr, "\n$", "")
-		render.setFont('DebugFixed')
-		render.setRGBA(0, 0, 0, 255)
-		render.drawRectFast(0, 0, render.getTextSize(dbgStr))
-		render.setRGBA(255, 255, 255, 255)
-		render.drawText(0, 0, dbgStr)
-		--]]
-	end)
+	-- Load order is going to become a problem. I have no doubt that at some
+	-- point an impossible load order will be required, and when that
+	-- happens, it's going to fucking suck.
+	
+	--@include sm64sf/coprocessor.lua
+	require('sm64sf/coprocessor.lua')
+	
+	--@include sm64sf/include/config.lua
+	require('sm64sf/include/config.lua')
+	--@include sm64sf/include/geo_commands.lua
+	require('sm64sf/include/geo_commands.lua')
+	--@include sm64sf/include/gfx_dimensions.lua
+	require('sm64sf/include/gfx_dimensions.lua')
+	--@include sm64sf/include/pr/gbi.lua
+	require('sm64sf/include/pr/gbi.lua')
+	
+	--@include sm64sf/src/init.lua
+	require('sm64sf/src/init.lua')
+	
+	--@include sm64sf/src/buffers/buffers.lua
+	require('sm64sf/src/buffers/buffers.lua')
+	
+	--@include sm64sf/src/engine/geo_layout.lua
+	require('sm64sf/src/engine/geo_layout.lua')
+	--@include sm64sf/src/engine/level_script.lua
+	require('sm64sf/src/engine/level_script.lua')
+	
+	--@include sm64sf/src/menu/intro_geo.lua
+	require('sm64sf/src/menu/intro_geo.lua')
+	--@include sm64sf/src/menu/level_select_menu.lua
+	require('sm64sf/src/menu/level_select_menu.lua')
+	
+	--@include sm64sf/src/game/area.lua
+	require('sm64sf/src/game/area.lua')
+	--@include sm64sf/src/game/game.lua
+	require('sm64sf/src/game/game.lua')
+	--@include sm64sf/src/game/geo_misc.lua
+	require('sm64sf/src/game/geo_misc.lua')
+	--@include sm64sf/src/game/object_list_processor.lua
+	require('sm64sf/src/game/object_list_processor.lua')
+	--@include sm64sf/src/game/screen_transition.lua
+	require('sm64sf/src/game/screen_transition.lua')
+	
+	--@include sm64sf/levels/intro/geo.lua
+	require('sm64sf/levels/intro/geo.lua')
+	--@include sm64sf/levels/intro/leveldata.lua
+	require('sm64sf/levels/intro/leveldata.lua')
+	--@include sm64sf/levels/intro/script.lua
+	require('sm64sf/levels/intro/script.lua')
+	--@include sm64sf/levels/entry.lua
+	require('sm64sf/levels/entry.lua')
+	
+	_GR = setmetatable({}, {__mode='kv'})
+	for k, v in pairs(_G) do
+		_GR[v] = tostring(k)
+	end
+	
+	Game:initialize()
+	startGame()
 end
-hook.add('render', '', function()
+local bg = Color(0, 0, 0)
+hook.add('render', 'consent', function()
 	render.setBackgroundColor(bg)
 	render.setFont('DermaDefault')
 	render.drawText(10, 10, "Press E on screen to activate\n\nNOTE: Extremely early in development,\nit does not do very much right now")
