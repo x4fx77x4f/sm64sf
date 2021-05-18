@@ -80,23 +80,23 @@ GFX.rsp = {
 	modelview_matrix_stack_size = 0,
 	MP_matrix = Array(4):fill(0):map(function()
 		return Array(4):fill(0):destroy()
-	end),
+	end):destroy(),
 	P_matrix = Array(4):fill(0):map(function()
 		return Array(4):fill(0):destroy()
-	end),
+	end):destroy(),
 	current_lights = Array(MAX_LIGHTS + 1):fill(0):map(function()
 		return {
 			col = {0, 0, 0},
 			colc = {0, 0, 0},
 			dir = {0, 0, 0},
 		}
-	end),
+	end):destroy(),
 	current_lights_coeffs = Array(MAX_LIGHTS):fill(0):map(function()
 		return Array(3):fill(0.0):destroy()
-	end),
+	end):destroy(),
 	current_lookat_coeffs = Array(2):fill(0):map(function()
 		return Array(3):fill(0.0):destroy()
-	end),
+	end):destroy(),
 	current_num_lights = 0,
 	lights_changed = false,
 	geometry_mode = 0,
@@ -109,7 +109,7 @@ GFX.rsp = {
 			color = { r = 0, g = 0, b = 0, a = 0 },
 			clip_rej = 0
 		}
-	end)
+	end):destroy()
 }
 
 -- RDP
