@@ -162,8 +162,6 @@ local function init(initial)
 	
 	--@include sm64sf/include/config.lua
 	require('sm64sf/include/config.lua')
-	--@include sm64sf/include/geo_commands.lua
-	require('sm64sf/include/geo_commands.lua')
 	--@include sm64sf/include/gfx_dimensions.lua
 	require('sm64sf/include/gfx_dimensions.lua')
 	--@include sm64sf/include/gbi.lua

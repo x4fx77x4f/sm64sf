@@ -1,3 +1,5 @@
+-- https://hack64.net/wiki/doku.php?id=super_mario_64:geometry_layout_commands
+
 -- Layers
 LAYER_FORCE = 0
 LAYER_OPAQUE = 1
@@ -381,7 +383,7 @@ local function wrap(dst, src)
 end
 wrap('ANIMATED_PART')
 wrap('ASM', GeoLayout.node_generated)
-wrap('BACKGROUND', GeoLayout.node_generated)
+wrap('BACKGROUND')
 wrap('BILLBOARD')
 wrap('BRANCH', GeoLayout.branch)
 wrap('BRANCH_AND_LINK', GeoLayout.branch_and_link)
@@ -406,3 +408,7 @@ wrap('SWITCH_CASE')
 wrap('TRANSLATE_NODE', GeoLayout.node_translate)
 wrap('TRANSLATE_ROTATE')
 wrap('ZBUFFER', GeoLayout.node_master_list)
+-- non-sm64js
+wrap('BACKGROUND_COLOR', GeoLayout.node_background)
+wrap('CAMERA_FRUSTUM', GeoLayout.node_perspective)
+wrap('TRANSLATE_NODE_WITH_DL', GeoLayout.node_translate)
