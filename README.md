@@ -1,7 +1,7 @@
 # SM64SF
 This is an **unofficial** port of Nintendo's *Super Mario 64* to [StarfallEx](https://github.com/thegrb93/StarfallEx). Almost everything has been translated manually.
 
-![Screenshot](https://user-images.githubusercontent.com/70858634/115991094-d7407280-a594-11eb-81ca-6830868f193c.png)
+![Screenshot](https://user-images.githubusercontent.com/70858634/118589730-f8008000-b76e-11eb-9c90-0c3befbd37be.png)
 
 ## Usage
 1. `git clone https://github.com/x4fx77x4f/sm64sf.git sm64sf`
