@@ -213,6 +213,10 @@ local function init(initial)
 	Game:initialize()
 	startGame()
 end
+if SCREENGRAB then
+	init()
+	return
+end
 local bg = Color(0, 0, 0)
 hook.add('render', 'consent', function()
 	render.setBackgroundColor(bg)
