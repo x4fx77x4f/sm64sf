@@ -1,5 +1,6 @@
 -- Derived from https://github.com/sm64js/sm64js/blob/a4b809b055119b1c716f25610a59543bc9e6b2a2/src/include/gbi.js
 -- FUN FACT: Lua has a hardcoded limit of 200 local variables. I found that out while making this file.
+-- ALSO: Fuck this Gbi prefix.
 
 Gbi = {}
 
@@ -64,13 +65,13 @@ Gbi.G_TEXTURE_SCALE_FRAC = 16
 Gbi.G_SCALE_FRAC = 8
 Gbi.G_ROTATE_FRAC = 16
 
--- G_SETOTHERMODE_L sft: shift count
+-- Gbi.G_SETOTHERMODE_L sft: shift count
 Gbi.G_MDSFT_ALPHACOMPARE = 0
 Gbi.G_MDSFT_ZSRCSEL = 2
 Gbi.G_MDSFT_RENDERMODE = 3
 Gbi.G_MDSFT_BLENDER = 16
 
--- G_SETOTHERMODE_H sft: shift count
+-- Gbi.G_SETOTHERMODE_H sft: shift count
 Gbi.G_MDSFT_BLENDMASK = 0 -- unsupported
 Gbi.G_MDSFT_ALPHADITHER = 4
 Gbi.G_MDSFT_RGBDITHER = 6
@@ -86,69 +87,69 @@ Gbi.G_MDSFT_CYCLETYPE = 20
 Gbi.G_MDSFT_COLORDITHER = 22 -- unsupported in HW 2.0
 Gbi.G_MDSFT_PIPELINE = 23
 
--- G_SETOTHERMODE_H gPipelineMode
+-- Gbi.G_SETOTHERMODE_H gPipelineMode
 Gbi.G_PM_1PRIMITIVE = 1
 Gbi.G_PM_NPRIMITIVE = 0
 
--- G_SETOTHERMODE_H gSetCycleType
+-- Gbi.G_SETOTHERMODE_H gSetCycleType
 Gbi.G_CYC_1CYCLE = 0
 Gbi.G_CYC_2CYCLE = 1
 Gbi.G_CYC_COPY = 2
 Gbi.G_CYC_FILL = 3
 
--- G_SETOTHERMODE_H gSetTexturePersp
+-- Gbi.G_SETOTHERMODE_H gSetTexturePersp
 Gbi.G_TP_NONE = 0
 Gbi.G_TP_PERSP = 1
 
--- G_SETOTHERMODE_H gSetTextureDetail
+-- Gbi.G_SETOTHERMODE_H gSetTextureDetail
 Gbi.G_TD_CLAMP = 0
 Gbi.G_TD_SHARPEN = 1
 Gbi.G_TD_DETAIL = 2
 
--- G_SETOTHERMODE_H gSetTextureLOD
+-- Gbi.G_SETOTHERMODE_H gSetTextureLOD
 Gbi.G_TL_TILE = 0
 Gbi.G_TL_LOD = 1
 
--- G_SETOTHERMODE_H gSetTextureLUT
+-- Gbi.G_SETOTHERMODE_H gSetTextureLUT
 Gbi.G_TT_NONE = 0
 Gbi.G_TT_RGBA16 = 2
 Gbi.G_TT_IA16 = 3
 
--- G_SETOTHERMODE_H gSetTextureFilter
+-- Gbi.G_SETOTHERMODE_H gSetTextureFilter
 Gbi.G_TF_POINT = 0
 Gbi.G_TF_AVERAGE = 3
 Gbi.G_TF_BILERP = 2
 
--- G_SETOTHERMODE_H gSetTextureConvert
+-- Gbi.G_SETOTHERMODE_H gSetTextureConvert
 Gbi.G_TC_CONV = 0
 Gbi.G_TC_FILTCONV = 5
 Gbi.G_TC_FILT = 6
 
--- G_SETOTHERMODE_H gSetCombineKey
+-- Gbi.G_SETOTHERMODE_H gSetCombineKey
 Gbi.G_CK_NONE = 0
 Gbi.G_CK_KEY = 1
 
--- G_SETOTHERMODE_H gSetColorDither
+-- Gbi.G_SETOTHERMODE_H gSetColorDither
 Gbi.G_CD_MAGICSQ = 0
 Gbi.G_CD_BAYER = 1
 Gbi.G_CD_NOISE = 2
 
--- G_SETOTHERMODE_H gSetAlphaDither
+-- Gbi.G_SETOTHERMODE_H gSetAlphaDither
 Gbi.G_AD_PATTERN = 0
 Gbi.G_AD_NOTPATTERN = 1
 Gbi.G_AD_NOISE = 2
 Gbi.G_AD_DISABLE = 3
 
--- G_SETOTHERMODE_L gSetAlphaCompare
+-- Gbi.G_SETOTHERMODE_L gSetAlphaCompare
 Gbi.G_AC_NONE = bit.lshift(0, Gbi.G_MDSFT_ALPHACOMPARE)
 Gbi.G_AC_THRESHOLD = bit.lshift(1, Gbi.G_MDSFT_ALPHACOMPARE)
 Gbi.G_AC_DITHER = bit.lshift(3, Gbi.G_MDSFT_ALPHACOMPARE)
 
--- G_SETOTHERMODE_L gSetDepthSource
+-- Gbi.G_SETOTHERMODE_L gSetDepthSource
 Gbi.G_ZS_PIXEL = bit.lshift(0, Gbi.G_MDSFT_ZSRCSEL)
 Gbi.G_ZS_PRIM = bit.lshift(1, Gbi.G_MDSFT_ZSRCSEL)
 
--- G_SETOTHERMODE_L gSetRenderMode
+-- Gbi.G_SETOTHERMODE_L gSetRenderMode
 AA_EN = 0x8
 Z_CMP = 0x10
 Z_UPD = 0x20
@@ -201,7 +202,7 @@ SHADER_OPT_ALPHA = bit.lshift(1, 24)
 SHADER_OPT_FOG = bit.lshift(1, 25)
 SHADER_OPT_TEXTURE_EDGE = bit.lshift(1, 26)
 
--- G_SETCOMBINE: color combine modes
+-- Gbi.G_SETCOMBINE: color combine modes
 -- Color combiner constants:
 Gbi.G_CCMUX_COMBINED = 0
 Gbi.G_CCMUX_TEXEL0 = 1
@@ -237,41 +238,41 @@ Gbi.G_ACMUX_PRIM_LOD_FRAC = 6
 Gbi.G_ACMUX_1 = 6
 Gbi.G_ACMUX_0 = 7
 
--- G_SETIMG fmt: set image formats
+-- Gbi.G_SETIMG fmt: set image formats
 Gbi.G_IM_FMT_RGBA = 0
 Gbi.G_IM_FMT_YUV = 1
 Gbi.G_IM_FMT_CI = 2
 Gbi.G_IM_FMT_IA = 3
 Gbi.G_IM_FMT_I = 4
 
--- G_SETIMG siz: set image pixel size
+-- Gbi.G_SETIMG siz: set image pixel size
 Gbi.G_IM_SIZ_4b = 0
 Gbi.G_IM_SIZ_8b = 1
 Gbi.G_IM_SIZ_16b = 2
 Gbi.G_IM_SIZ_32b = 3
 Gbi.G_IM_SIZ_DD = 5
 
-Gbi.G_IM_SIZ_INCR_TABLE = {
+Gbi.G_IM_SIZ_INCR_TABLE = {[0]=
 	1,
 	0
 }
-Gbi.G_IM_SIZ_SHIFT_TABLE = {
+Gbi.G_IM_SIZ_SHIFT_TABLE = {[0]=
 	1,
 	0
 }
 
-Gbi.G_IM_SIZ_LOAD_BLOCK_TABLE = {
-	G_IM_SIZ_16b,
-	G_IM_SIZ_16b
+Gbi.G_IM_SIZ_LOAD_BLOCK_TABLE = {[0]=
+	Gbi.G_IM_SIZ_16b,
+	Gbi.G_IM_SIZ_16b
 }
-Gbi.G_IM_SIZ_BYTES_TABLE = {
-	G_IM_SIZ_8b,
-	G_IM_SIZ_16b
+Gbi.G_IM_SIZ_BYTES_TABLE = {[0]=
+	Gbi.G_IM_SIZ_8b,
+	Gbi.G_IM_SIZ_16b
 }
 
-Gbi.G_IM_SIZ_LINE_BYTES_TABLE = {
-	G_IM_SIZ_8b,
-	G_IM_SIZ_16b
+Gbi.G_IM_SIZ_LINE_BYTES_TABLE = {[0]=
+	Gbi.G_IM_SIZ_8b,
+	Gbi.G_IM_SIZ_16b
 }
 
 Gbi.G_TX_LOADTILE = 7
@@ -305,7 +306,7 @@ Gbi.G_RM_FOG_SHADE_A_AA_ZB_TEX_EDGE2 = 0xc8113078
 Gbi.G_RM_FOG_SHADE_A_AA_ZB_OPA_DECAL2 = 0xc8112d58
 Gbi.G_RM_FOG_SHADE_A_AA_ZB_XLU_SURF2 = 0xc81049d8
 
--- G_MOVEWORD types
+-- Gbi.G_MOVEWORD types
 Gbi.G_MW_MATRIX = 0x00 -- NOTE: also used by movemem
 Gbi.G_MW_NUMLIGHT = 0x02
 Gbi.G_MW_CLIP = 0x04
@@ -315,11 +316,11 @@ Gbi.G_MW_LIGHTCOL = 0x0a
 Gbi.G_MW_POINTS = 0x0c
 Gbi.G_MW_PERSPNORM = 0x0e
 
--- G_MOVEMEM types
+-- Gbi.G_MOVEMEM types
 Gbi.G_MV_VIEWPORT = 1
 Gbi.G_MV_L = 2
 
--- G_MTX parameter flags
+-- Gbi.G_MTX parameter flags
 Gbi.G_MTX_MODELVIEW = 0 -- matrix types
 Gbi.G_MTX_PROJECTION = 1
 Gbi.G_MTX_MUL = 0 -- concat or load
@@ -699,23 +700,21 @@ end
 
 
 function Gbi.gDPLoadBlockTexture(displaylist, width, height, format, image)
-	table.insert(displaylist,
-		gsDPSetTextureImage(format, Gbi.G_IM_SIZ_16b, 1, image),
-		gsDPSetTile(format, Gbi.G_IM_SIZ_16b, 0, 0, Gbi.G_TX_LOADTILE, 0, Gbi.G_TX_NOMIRROR, Gbi.G_TX_NOMASK, Gbi.G_TX_NOLOD, Gbi.G_TX_NOMIRROR, Gbi.G_TX_NOMASK, Gbi.G_TX_NOLOD),
-		gsDPLoadBlock(G_TX_LOADTILE, 0, 0, (width * height) - 1)
-	)
+	table.insert(displaylist, Gbi.gsDPSetTextureImage(format, Gbi.G_IM_SIZ_16b, 1, image))
+	table.insert(displaylist, Gbi.gsDPSetTile(format, Gbi.G_IM_SIZ_16b, 0, 0, Gbi.G_TX_LOADTILE, 0, Gbi.G_TX_NOMIRROR, Gbi.G_TX_NOMASK, Gbi.G_TX_NOLOD, Gbi.G_TX_NOMIRROR, Gbi.G_TX_NOMASK, Gbi.G_TX_NOLOD))
+	table.insert(displaylist, Gbi.gsDPLoadBlock(G_TX_LOADTILE, 0, 0, (width * height) - 1))
 end
 
 function Gbi.gDPLoadTextureBlock(displaylist, timg, fmt, siz, width, height, pal, cms, cmt, masks, maskt, shifts, shiftt)
-	table.insert(displaylist,
-		gsDPSetTextureImage(fmt, Gbi.G_IM_SIZ_LOAD_BLOCK_TABLE[siz], 1, timg),
-		gsDPSetTile(fmt, Gbi.G_IM_SIZ_LOAD_BLOCK_TABLE[siz], 0, 0, Gbi.G_TX_LOADTILE, 0, cmt, maskt, shiftt, cms, masks, shifts),
-		gsDPLoadBlock(G_TX_LOADTILE, 0, 0, bit.rshift(((width) * (height) + G_IM_SIZ_INCR_TABLE[siz]), Gbi.G_IM_SIZ_SHIFT_TABLE[siz]) - 1),
-		gsDPSetTile(fmt, siz,
-			bit.rshift((((width) * G_IM_SIZ_LINE_BYTES_TABLE[siz]) + 7), 3),
-			0, Gbi.G_TX_RENDERTILE, pal, cmt, maskt, shiftt, cms, masks, shifts),
-		gsDPSetTileSize(G_TX_RENDERTILE, 0, 0, bit.lshift(((width) - 1), Gbi.G_TEXTURE_IMAGE_FRAC), bit.lshift(((height) - 1), Gbi.G_TEXTURE_IMAGE_FRAC))
+	table.insert(displaylist, Gbi.gsDPSetTextureImage(fmt, Gbi.G_IM_SIZ_LOAD_BLOCK_TABLE[siz], 1, timg))
+	table.insert(displaylist, Gbi.gsDPSetTile(fmt, Gbi.G_IM_SIZ_LOAD_BLOCK_TABLE[siz], 0, 0, Gbi.G_TX_LOADTILE, 0, cmt, maskt, shiftt, cms, masks, shifts))
+	table.insert(displaylist, Gbi.gsDPLoadBlock(G_TX_LOADTILE, 0, 0, bit.rshift(((width) * (height) + Gbi.G_IM_SIZ_INCR_TABLE[siz]), Gbi.G_IM_SIZ_SHIFT_TABLE[siz]) - 1))
+	table.insert(displaylist, Gbi.gsDPSetTile(
+		fmt, siz,
+		bit.rshift((((width) * Gbi.G_IM_SIZ_LINE_BYTES_TABLE[siz]) + 7), 3),
+		0, Gbi.G_TX_RENDERTILE, pal, cmt, maskt, shiftt, cms, masks, shifts)
 	)
+	table.insert(displaylist, Gbi.gsDPSetTileSize(G_TX_RENDERTILE, 0, 0, bit.lshift(((width) - 1), Gbi.G_TEXTURE_IMAGE_FRAC), bit.lshift(((height) - 1), Gbi.G_TEXTURE_IMAGE_FRAC)))
 end
 
 function Gbi.gsSPDisplayList(childDisplayList)
@@ -962,48 +961,12 @@ end
 
 function Gbi.gsDPLoadTextureBlock(timg, fmt, siz, width, height, pal, cms, cmt, masks, maskt, shifts, shiftt)
 	return {
-		gsDPSetTextureImage(fmt, Gbi.G_IM_SIZ_LOAD_BLOCK_TABLE[siz], 1, timg),
-		gsDPSetTile(fmt, Gbi.G_IM_SIZ_LOAD_BLOCK_TABLE[siz], 0, 0, Gbi.G_TX_LOADTILE, 0, cmt, maskt, shiftt, cms, masks, shifts),
-		gsDPLoadBlock(G_TX_LOADTILE, 0, 0, bit.rshift(((width) * (height) + G_IM_SIZ_INCR_TABLE[siz]), Gbi.G_IM_SIZ_SHIFT_TABLE[siz]) - 1),
-		gsDPSetTile(fmt, siz,
-			bit.rshift((((width) * G_IM_SIZ_LINE_BYTES_TABLE[siz]) + 7), 3),
+		Gbi.gsDPSetTextureImage(fmt, Gbi.G_IM_SIZ_LOAD_BLOCK_TABLE[siz], 1, timg),
+		Gbi.gsDPSetTile(fmt, Gbi.G_IM_SIZ_LOAD_BLOCK_TABLE[siz], 0, 0, Gbi.G_TX_LOADTILE, 0, cmt, maskt, shiftt, cms, masks, shifts),
+		Gbi.gsDPLoadBlock(G_TX_LOADTILE, 0, 0, bit.rshift(((width) * (height) + Gbi.G_IM_SIZ_INCR_TABLE[siz]), Gbi.G_IM_SIZ_SHIFT_TABLE[siz]) - 1),
+		Gbi.gsDPSetTile(fmt, siz,
+			bit.rshift((((width) * Gbi.G_IM_SIZ_LINE_BYTES_TABLE[siz]) + 7), 3),
 			0, Gbi.G_TX_RENDERTILE, pal, cmt, maskt, shiftt, cms, masks, shifts),
-		gsDPSetTileSize(G_TX_RENDERTILE, 0, 0, bit.lshift(((width) - 1), Gbi.G_TEXTURE_IMAGE_FRAC), bit.lshift(((height) - 1), Gbi.G_TEXTURE_IMAGE_FRAC))
+		Gbi.gsDPSetTileSize(G_TX_RENDERTILE, 0, 0, bit.lshift(((width) - 1), Gbi.G_TEXTURE_IMAGE_FRAC), bit.lshift(((height) - 1), Gbi.G_TEXTURE_IMAGE_FRAC))
 	}
-end
-
------END SM64JS DERIVED CODE-----
-
--- vertex (set up for use with colors)
-local function Vtx_t()
-	-- GBI_FLOATS
-	return {
-		ob = Vector(0, 0, 0), -- x, y, z
-		flag = 0,
-		tc = {0, 0}, -- texture coord
-		cn = Color(0, 0, 0, 0), -- color & alpha
-	}
-end
-
--- Vertex (set up for use with normals)
-local function Vtx_tn()
-	-- GBI_FLOATS
-	return {
-		ob = Vector(0, 0, 0), -- x, y, z
-		flag = 0,
-		tc = {0, 0}, -- texture coord
-		n = {0, 0, 0},
-		a = 0,
-	}
-end
-
-function Gbi.Vtx(n)
-	local t = {}
-	for i=1, n do
-		t[i] = {
-			v = Vtx_t(),
-			n = Vtx_tn(),
-		}
-	end
-	return t
 end
