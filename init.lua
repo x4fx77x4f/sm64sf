@@ -28,6 +28,7 @@ function dbgprintf2(...)
 	dbgStr = sprintf(...).."\n"..dbgStr
 end
 
+-- DEPRECATED; USE asset_loader.lua INSTEAD!
 local SF_USE_INCLUDEDATA = true
 local SF_CACHE_INCLUDEDATA = true
 local SF_INCLUDE_PREFIX = 'sm64sf'
@@ -154,6 +155,8 @@ local function init(initial)
 	-- point an impossible load order will be required, and when that
 	-- happens, it's going to fucking suck.
 	
+	--@include sm64sf/asset_loader.lua
+	require('sm64sf/asset_loader.lua')
 	--@include sm64sf/coprocessor.lua
 	require('sm64sf/coprocessor.lua')
 	
@@ -163,8 +166,8 @@ local function init(initial)
 	require('sm64sf/include/geo_commands.lua')
 	--@include sm64sf/include/gfx_dimensions.lua
 	require('sm64sf/include/gfx_dimensions.lua')
-	--@include sm64sf/include/pr/gbi.lua
-	require('sm64sf/include/pr/gbi.lua')
+	--@include sm64sf/include/gbi.lua
+	require('sm64sf/include/gbi.lua')
 	--@include sm64sf/include/segment_symbols.lua
 	require('sm64sf/include/segment_symbols.lua')
 	
@@ -178,6 +181,8 @@ local function init(initial)
 	require('sm64sf/src/engine/geo_layout.lua')
 	--@include sm64sf/src/engine/level_script.lua
 	require('sm64sf/src/engine/level_script.lua')
+	--@include sm64sf/src/engine/math_util.lua
+	require('sm64sf/src/engine/math_util.lua')
 	
 	--@include sm64sf/src/menu/intro_geo.lua
 	require('sm64sf/src/menu/intro_geo.lua')
@@ -201,6 +206,8 @@ local function init(initial)
 	require('sm64sf/levels/intro/leveldata.lua')
 	--@include sm64sf/levels/intro/script.lua
 	require('sm64sf/levels/intro/script.lua')
+	--@include sm64sf/levels/scripts.lua
+	require('sm64sf/levels/scripts.lua')
 	--@include sm64sf/levels/entry.lua
 	require('sm64sf/levels/entry.lua')
 	

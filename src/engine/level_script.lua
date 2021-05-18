@@ -63,7 +63,7 @@ end
 function LevelCommands:init_level()
 	--GeoLayout.gObjParentGraphNode = init_graph_node_start(nil, GeoLayout.gObjParentGraphNode)
 	--ObjectListProcessor:clear_objects()
-	--Area:clear_areas()
+	Area:clear_areas()
 	self:next()
 end
 
@@ -214,12 +214,12 @@ function LevelCommands:set_area(what, value)
 end
 
 function LevelCommands:load_area(areaIndex)
-	--Area:load_area(areaIndex)
+	Area:load_area(areaIndex)
 	self:next()
 end
 
 function LevelCommands:unload_area(what, value)
-	--Area:clear_areas()
+	Area:clear_areas()
 	-- clear_area_graph_nodes -- call all node functions with init and clear command
 	self:next()
 end
@@ -302,7 +302,7 @@ function LevelCommands:end_area(data)
 end
 
 function LevelCommands:transition(transType, time, red, green, blue)
-	if false and Area.gCurrentArea then
+	if Area.gCurrentArea then
 		Area:play_transition(transType, time, red, green, blue)
 	end
 	
@@ -366,7 +366,7 @@ function LevelCommands:level_script_execute()
 	end
 	
 	Game:init_render_image()
-	--Area:render_game()
+	Area:render_game()
 	Game:end_master_display_list()
 end
 
@@ -420,6 +420,8 @@ wrap('EXIT_AND_EXECUTE', function(self, seg, script, scriptEnd, entry)
 	return self:execute(entry)
 end)
 wrap('FIXED_LOAD', LevelCommands.next)
+--wrap('LOOP_BEGIN')
+--wrap('LOOP_UNTIL')
 wrap('SET_MENU_MUSIC', LevelCommands.next)
 wrap('SET_REG', LevelCommands.set_register)
 wrap('STOP_MUSIC', LevelCommands.next)

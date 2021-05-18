@@ -9,159 +9,190 @@ WARP_TRANSITION_FADE_INTO_MARIO = 0x11
 WARP_TRANSITION_FADE_FROM_BOWSER = 0x12
 WARP_TRANSITION_FADE_INTO_BOWSER = 0x13
 
-local gPlayerSpawnInfos = {{}}
-local D_8033A160 = {}
-for i=1, 0x100 do
-	D_8033A160[i] = {}
-end
-local gAreaData = {{}, {}, {}, {}, {}, {}, {}, {}}
+local D_8032CF00 = { -- default view port?
+	vscale = {640, 480, 511, 0},
+	vtrans = {640, 480, 511, 0}
+}
 
-local gWarpTransition = {data={}}
+Area = {}
 
-local gCurrCourseNum
-local gCurrActNum
-local gCurrAreaIndex
-local gSavedCourseNum
-local gPauseScreenMode
-local gSaveOptSelectIndex
-
-local gMarioSpawnInfo = gPlayerSpawnInfos[1] -- This won't work. Fucking pointer bullshit.
-local gLoadedGraphNodes = D_8033A160
-gAreas = gAreaData
-gCurrentArea = nil
-local gCurrCreditsEntry = nil
-local D_8032CE74 = nil
-local D_8032CE78 = nil
-local gWarpTransDelay = 0
-local gFBSetColor = 0
-local gWarpTransFBSetColor = Color(0, 0, 0)
-local gWarpTransRed = 0
-local gWarpTransGreen = 0
-local gWarpTransBlue = 0
-local gCurrSaveFileNum = 1
-local gCurrLevelNum = LEVEL_MIN
-
-function set_warp_transition_rgb(red, green, blue)
-	gWarpTransFBSetColor = Color(red, green, blue)
-	gWarpTransRed = red
-	gWarpTransGreen = green
-	gWarpTransBlue = blue
-end
-
-function print_intro_text()
-	if bit.band(gGlobalTimer, 0x1F) < 20 then
-		if gControllerBits == 0 then
-			print_text_centered(SCREEN_WIDTH / 2, 20, "NO CONTROLLER")
-		else
-			print_text_centered(60, 38, "PRESS")
-			print_text_centered(60, 20, "START")
+function Area:load_area(index)
+	if not self.gCurrentArea and self.gAreas[index] then
+		self.gCurrentArea = self.gAreas[index]
+		self.gCurAreaIndex = self.gCurrentArea.index
+		
+		if self.gCurrentArea.terrainData then
+			-- WTF is gLinker?
+			--gLinker.SurfaceLoad.load_area_terrain(index, this.gCurrentArea.terrainData, this.gCurrentArea.surfaceRooms, this.gCurrentArea.macroObjects)
+		end
+		
+		if self.gCurrentArea.objectSpawnInfos then
+			--gLinker.ObjectListProcessor.spawn_objects_from_info(this.gCurrentArea.objectSpawnInfos)
 		end
 	end
 end
 
-function clear_areas()
+function Area:load_mario_area()
+	self:load_area(self.gMarioSpawnInfo.areaIndex)
 	
-end
-
-function load_area(index)
-	if gCurrentArea == nil and gAreaData[index].unk04 ~= nil then
-		gCurrentArea = gAreaData[index]
-		gCurrAreaIndex = gCurrentArea.index
-		
-		if gCurrentArea.terrainData ~= nil then
-			load_area_terrain(index, gCurrentArea.terrainData, gCurrentArea.surfaceRooms, gCurrentArea.macroObjects)
-		end
-		
-		if gCurrentArea.objectSpawnInfos ~= nil then
-			spawn_objects_from_info(0, gCurrentArea.objectSpawnInfos)
-		end
-		
-		--load_obj_warp_nodes()
-		--geo_call_global_function_nodes(gCurrentArea.unk04.node, GEO_CONTEXT_AREA_LOAD)
+	if self.gCurrentArea.index == self.gMarioSpawnInfo.areaIndex then
+		self.gCurrentArea.flags = bit.bor(self.gCurrentArea.flags, 0x01)
+		--gLinker.ObjectListProcessor.spawn_objects_from_info(this.gMarioSpawnInfo)
+		--[[
+		local marioCloneSpawnInfo = self.gMarioSpawnInfo
+		marioCloneSpawnInfo.startPos[1] = marioCloneSpawnInfo.startPos[1]-500
+		gLinker.ObjectListProcessor.spawn_objects_from_info(this.marioCloneSpawnInfo)
+		--]]
 	end
 end
 
-function unload_area()
-	if gCurrentArea ~= nil then
-		--unload_objects_from_area(0, gCurrentArea.index)
-		--geo_call_global_function_nodes(gCurrentArea.unk04.node, GEO_CONTEXT_AREA_UNLOAD)
-		
-		gCurrentArea.flags = 0 -- redundant?
-		gCurrentArea = nil
-		gWarpTransition.isActive = false
-	end
+function Area:area_update_objects()
+	--GeoRenderer.gAreaUpdateCounter = GeoRenderer.gAreaUpdateCounter+1
+	--gLinker.ObjectListProcessor.update_objects(0)
 end
 
--- Sets up the information needed to play a warp transition, including the
--- transition type, time in frames, and the RGB color that will fill the screen.
-function play_transition(transType, time, red, green, blue)
-	gWarpTransition.isActive = true
-	gWarpTransition.type = transType
-	gWarpTransition.time = time
-	gWarpTransition.pauseRendering = false
+function Area:set_warp_transition_rgb(red, green, blue)
+	local warpTransitionRGBA16 = SF_BOR(bit.lshift(bit.rshift(red, 3), 11), bit.lshift(bit.rshift(green, 3), 6), bit.lshift(bit.rshift(blue, 3), 1), 1)
+	self.gWarpTransFBSetColor = bit.bor(bit.lshift(warpTransitionRGBA16, 16), warpTransitionRGBA16)
+	self.gWarpTransRed = red
+	self.gWarpTransGreen = green
+	self.gWarpTransBlue = blue
+end
+
+function Area:play_transition(transType, time, red, green, blue)
+	self.gWarpTransition.isActive = true
+	self.gWarpTransition.type = transType
+	self.gWarpTransition.time = time
+	self.gWarpTransition.pauseRendering = false
 	
 	-- The lowest bit of transType determines if the transition is fading in or out.
 	if bit.band(transType, 1) ~= 0 then
-		set_warp_transition_rgb(red, green, blue)
+		self:set_warp_transition_rgb(red, green, blue)
 	else
-		red = gWarpTransRed
-		green = gWarpTransGreen
-		blue = gWarpTransBlue
+		red = self.gWarpTransRed
+		green = self.gWarpTransGreen
+		blue = self.gWarpTransBlue
 	end
 	
-	if transType < 8 then -- if transition is RGB
-		gWarpTransition.data.red = red
-		gWarpTransition.data.green = green
-		gWarpTransition.data.blue = blue
-	else -- if transition is textured
-		gWarpTransition.data.red = red
-		gWarpTransition.data.green = green
-		gWarpTransition.data.blue = blue
+	self.gWarpTransition.data.red = red
+	self.gWarpTransition.data.green = green
+	self.gWarpTransition.data.blue = blue
+	if transType >= 8 then -- if transition is not RGB
+		-- Both the start and end textured transition are always located in the middle of the screen.
+		-- If you really wanted to, you could place the start at one corner and the end at
+		-- the opposite corner. This will make the transition image look like it is moving
+		-- across the screen.
+		self.gWarpTransition.data.startTexX = SCREEN_WIDTH / 2 / 2
+		self.gWarpTransition.data.startTexY = SCREEN_HEIGHT / 2 / 2
+		self.gWarpTransition.data.endTexX = SCREEN_WIDTH / 2 / 2
+		self.gWarpTransition.data.endTexY = SCREEN_HEIGHT / 2 / 2
 		
-		-- TODO: add texture support to play_transition
+		self.gWarpTransition.data.texTimer = 0
+		
+		if bit.band(transType, 1) ~= 0 then -- fading in
+			self.gWarpTransition.data.startTexRadius = SCREEN_WIDTH / 2
+			if transType >= 0x0F then
+				self.gWarpTransition.data.endTexRadius = 16
+			else
+				self.gWarpTransition.data.endTexRadius = 0
+			end
+		else -- fading out
+			if transType >= 0x0E then
+				self.gWarpTransition.data.startTexRadius = 16
+			else
+				self.gWarpTransition.data.startTexRadius = 0
+			end
+			self.gWarpTransition.data.endTexRadius = SCREEN_WIDTH / 2
+		end
 	end
 end
 
-function render_game()
-	if gCurrentArea ~= nil and not gWarpTransition.pauseRendering then
-		--gDPSetScissor()
-		--render_hud()
+function Area:clear_areas()
+	self.gCurrentArea = nil
+	self.gMarioSpawnInfo.areaIndex = -1
+	
+	for i, areaData in pairs(self.gAreas) do
+		table.assign(areaData, {
+			index = i,
+			flags = 0,
+			terrainType = 0,
+			geometryLayoutData = nil,
+			terrainData = nil,
+			surfaceRooms = nil,
+			macroObjects = nil,
+			warpNodes = nil,
+			paintingWarpNodes = nil,
+			instantWarps = nil,
+			objectSpawnInfos = nil,
+			camera = nil,
+			unused28 = nil,
+			whirlpools = {nil, nil},
+			dialog = {nil, nil},
+			musicParam = 0,
+			musicParam2 = 0
+		})
+	end
+end
+
+function Area:render_game()
+	if self.gCurrentArea then
+		--GeoRenderer:geo_process_root(self.gCurrentArea.geometryLayoutData, nil, nil, nil)
 		
-		--gDPSetScissor()
-		--render_text_labels()
-		--do_cutscene_handler()
-		--print_displaying_credits_entry()
-		--gDPSetScissor()
-		--gPauseScreenMode = render_menus_and_dialogs
+		Gbi.gSPViewport(Game.gDisplayList, D_8032CF00)
+		--Hud:render_hud()
+		--Print:render_text_labels()
 		
-		if gWarpTransition.isActive then
-			if gWarpTransDelay == 0 then
-				gWarpTransition.isActive = not render_screen_transition(
-					0,
-					gWarpTransition.type,
-					gWarpTransition.time,
-					gWarpTransition.data
-				)
-				if not gWarpTransition.isActive then
-					if bit.band(gWarpTransition.type, 1) ~= 0 then
-						gWarpTransition.pauseRendering = true
+		if self.gWarpTransition.isActive then
+			if self.gWarpTransDelay == 0 then
+				self.gWarpTransition.isActive = not render_screen_transition(0, self.gWarpTransition.type, self.gWarpTransition.time, self.gWarpTransition.data)
+				
+				if not self.gWarpTransition.isActive then
+					if bit.band(self.gWarpTransition.type, 1) ~= 0 then
+						self.gWarpTransition.pauseRendering = true
 					else
-						set_warp_transition_rgb(0, 0, 0)
+						self:set_warp_transition_rgb(0, 0, 0)
 					end
 				end
 			else
-				gWarpTransDelay = gWarpTransDelay-1
+				self.gWarpTransDelay = self.gWarpTransDelay-1
 			end
 		end
 	else
-		--render_text_labels()
-		if D_8032CE78 ~= nil then
-			clear_viewport(D_8032CE78, gWarpTransFBSetColor)
+		--Print:render_text_labels()
+	end
+end
+
+function Area:print_intro_text()
+	if bit.band(gGlobalTimer, 0x1F) < 20 then
+		local noController = false -- gControllerBits == 0
+		
+		if noController then
+			--Print:print_text_centered(SCREEN_WIDTH / 2, 20, "NO CONTROLLER")
 		else
-			clear_frame_buffer(gWarpTransFBSetColor)
+			--Print:print_text_centered(60, 38, "PRESS")
+			--Print:print_text_centered(60, 20, "START")
 		end
 	end
-	
-	D_8032CE74 = nil
-	D_8032CE78 = nil
 end
+
+Area.gCurrentArea = nil
+Area.gAreas = Array(8):fill(0):map(function() return { index = 0 } end):destroy()
+Area.gCurAreaIndex = 0
+Area.gCurrLevelNum = 0
+Area.gLoadedGraphNodes = {}
+
+Area.gMarioSpawnInfo = {
+	startPos = Vector(0, 0, 0),
+	startAngle = Angle(0, 0, 0),
+	areaIndex = 0, activeAreaIndex = 0,
+	behaviorArg = 0, behaviorScript = nil,
+	unk18 = nil, next = nil
+}
+
+Area.gWarpTransition = {
+	data = {}
+}
+Area.gWarpTransDelay = 0
+Area.gWarpTransRed = 0
+Area.gWarpTransGreen = 0
+Area.gWarpTransBlue = 0
