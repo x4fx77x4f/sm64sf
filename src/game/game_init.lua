@@ -63,19 +63,3 @@ function display_and_vsync()
 	end
 	gGlobalTimer = gGlobalTimer+1
 end
-
-function thread5_game_loop()
-	local script
-	
-	script = level_script_entry
-	
-	rendering_init()
-	
-	while true do
-		script = level_script_execute(script)
-		
-		display_and_vsync()
-		
-		coroutine.yield(true)
-	end
-end

@@ -131,24 +131,22 @@ function table.assign(target, ...)
 	end
 	return target
 end
-
-local perms = {'file.writeTemp', 'render.screen'}
-local function init(initial)
-	local hasPerm = true
-	for _, perm in pairs(perms) do
-		if not hasPermission(perm) then
-			hasPerm = false
-			pcall(setupPermissionRequest, perms, "Necessary", true)
-			return
+-- https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find
+function table.find(tbl, func)
+	local v = tbl[0]
+	if v ~= nil then
+		if func(v, 0, tbl) then
+			return v
 		end
 	end
-	if initial and player() ~= owner() then
-		return
+	for k, v in ipairs(func) do
+		if func(v, k, tbl) then
+			return v
+		end
 	end
-	hook.remove('render', 'consent')
-	hook.remove('starfallUsed', 'consent')
-	hook.remove('permissionrequest', 'consent')
-	
+end
+
+local thread = coroutine.create(function()
 	_GR = setmetatable({}, {__mode='k'})
 	
 	-- Load order is going to become a problem. I have no doubt that at some
@@ -157,8 +155,6 @@ local function init(initial)
 	
 	--@include sm64sf/asset_loader.lua
 	require('sm64sf/asset_loader.lua')
-	--@include sm64sf/coprocessor.lua
-	require('sm64sf/coprocessor.lua')
 	
 	--@include sm64sf/include/config.lua
 	require('sm64sf/include/config.lua')
@@ -209,6 +205,9 @@ local function init(initial)
 	--@include sm64sf/levels/entry.lua
 	require('sm64sf/levels/entry.lua')
 	
+	--@include sm64sf/coprocessor.lua
+	require('sm64sf/coprocessor.lua')
+	
 	for k, v in pairs(_G) do
 		if _GR[v] == nil then
 			_GR[v] = tostring(k)
@@ -217,6 +216,43 @@ local function init(initial)
 	
 	Game:initialize()
 	startGame()
+	
+	while true do
+		coroutine.yield(true)
+	end
+end)
+
+local perms = {'file.writeTemp', 'render.screen', 'render.offscreen'}
+local function init(initial)
+	local hasPerm = true
+	for _, perm in pairs(perms) do
+		if not hasPermission(perm) then
+			hasPerm = false
+			pcall(setupPermissionRequest, perms, "Necessary", true)
+			return
+		end
+	end
+	if initial and player() ~= owner() then
+		return
+	end
+	hook.remove('render', 'consent')
+	hook.remove('starfallUsed', 'consent')
+	hook.remove('permissionrequest', 'consent')
+	
+	render.createRenderTarget('screen')
+	render.createRenderTarget('final')
+	
+	local threshold = quotaMax()*0.8
+	hook.add('renderoffscreen', 'main', function()
+		local first = true
+		render.selectRenderTarget('screen')
+		while quotaAverage() < threshold do
+			if coroutine.resume(thread, first) then
+				return
+			end
+			first = false
+		end
+	end)
 end
 if SCREENGRAB then
 	init()
