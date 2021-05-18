@@ -66,34 +66,6 @@ end
 
 GFX.random = 0
 
--- JS compatibility
-local ArrayMeta = {}
-ArrayMeta.__index = ArrayMeta
-function ArrayMeta:fill(n)
-	for i=1, self._array_max do
-		self[i] = n
-	end
-	return self
-end
-function ArrayMeta:map(func)
-	for k, v in pairs(self) do
-		if k ~= '_array_max' then
-			self[k] = func(k, v) or self[k]
-		end
-	end
-	return self
-end
-function ArrayMeta:destroy()
-	self._array_max = nil
-	setmetatable(self, nil)
-	return self
-end
-local function Array(n)
-	return setmetatable({
-		_array_max = n
-	}, ArrayMeta)
-end
-
 -- buffer
 GFX.buf_vbo = {}
 GFX.buf_vbo_num_tris = 0

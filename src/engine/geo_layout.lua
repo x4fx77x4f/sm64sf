@@ -1,231 +1,408 @@
-local gObjParentGraphNode
-local gGraphNodePool
-local gCurRootGraphNode
+-- Layers
+LAYER_FORCE = 0
+LAYER_OPAQUE = 1
+LAYER_OPAQUE_DECAL = 2
+LAYER_OPAQUE_INTER = 3
+LAYER_ALPHA = 4
+LAYER_TRANSPARENT = 5
+LAYER_TRANSPARENT_DECAL = 6
+LAYER_TRANSPARENT_INTER = 7
 
-local gGeoViews
-local gGeoNumViews -- length of gGeoViews array
+-- sky background params
+BACKGROUND_OCEAN_SKY = 0
+BACKGROUND_FLAMING_SKY = 1
+BACKGROUND_UNDERWATER_CITY = 2
+BACKGROUND_BELOW_CLOUDS = 3
+BACKGROUND_SNOW_MOUNTAINS = 4
+BACKGROUND_DESERT = 5
+BACKGROUND_HAUNTED = 6
+BACKGROUND_GREEN_SKY = 7
+BACKGROUND_ABOVE_CLOUDS = 8
+BACKGROUND_PURPLE_SKY = 9
 
-local gGeoLayoutStack = {[0]=0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-local gCurGraphNodeList = {}
-local gCurGraphNodeIndex
-local gGeoLayoutStackIndex -- similar to SP register in MIPS
-local gGeoLayoutReturnIndex -- similar to RA register in MIPS
---gGeoLayoutCommands
-gGeoLayoutCommandOffset = 1
---gGeoLayoutCommand
-
-local function CMD_NEXT()
-	gGeoLayoutCommandOffset = gGeoLayoutCommandOffset+1
-	gGeoLayoutCommand = gGeoLayoutCommands[gGeoLayoutCommandOffset]
+local function copy3argsToObject(pos, argIndex, args)
+	for i = argIndex, i < argIndex + 3 do
+		table.insert(pos, args[i])
+	end
+	return 3
 end
 
--- 0x01: Terminate geo layout
-local function geo_layout_cmd_end()
-	gGeoLayoutStackIndex = gGeoLayoutReturnIndex
-	gGeoLayoutStackIndex = gGeoLayoutStackIndex-1
-	gGeoLayoutReturnIndex = bit.band(gGeoLayoutStack[gGeoLayoutStackIndex], 0xFFFF)
-	gGeoLayoutStackIndex = gGeoLayoutStackIndex-1
-	gCurGraphNodeIndex = bit.rshift(gGeoLayoutStack[gGeoLayoutStackIndex], 16)
-	return CMD_NEXT()
+local GeoLayout = {}
+GeoLayout.__index = GeoLayout
+
+function GeoLayout.new()
+	local self = setmetatable({}, GeoLayout)
+	
+	self.sCurrentLayout = {}
+	self.gGeoLayoutStack = {}
 end
 
--- 0x04: Open node
-local function geo_layout_cmd_open_node()
-	gCurGraphNodeList[gCurGraphNodeIndex + 1] = gCurGraphNodeList[gCurGraphNodeIndex]
-	gCurGraphNodeIndex = gCurGraphNodeIndex+1
-	return CMD_NEXT()
+function GeoLayout:next()
+	self.sCurrentLayout.index = self.sCurrentLayout.index+1
 end
 
--- 0x05: Close node
-local function geo_layout_cmd_close_node()
-	gCurGraphNodeIndex = gCurGraphNodeIndex-1
-	return CMD_NEXT()
+function GeoLayout:branch_and_link(args)
+	-- I'm assuming it's meant to be 'this.gGeoLayoutStack.push(this.sCurrentLayout)'
+	-- and not 'this.gGeoLayoutStack.push = this.sCurrentLayout'????
+	table.insert(self.gGeoLayoutStack, self.sCurrentLayout)
+	table.insert(self.gGeoLayoutStack, self.sCurGraphNodeIndex)
+	self.gGeoLayoutReturnIndex = self.gGeoLayoutStackIndex
+	self.sCurrentLayout = {index = 0, layout = args[1]}
 end
 
--- 0x08: Create a scene graph root node that specifies the viewport
-local function geo_layout_cmd_node_root(numEntries, x, y, width, height)
-	local graphNode
-	
-	-- number of entries to allocate for gGeoViews array
-	-- at least 2 are allocated by default
-	-- numEntries = 0x00: Mario face, 0x0A: all other levels
-	gGeoNumViews = numEntries + 2
-	
-	--graphNode = init_graph_node_root(gGraphNodePool, nil, 0, x, y, width, height)
-	graphNode, gGraphNodePool = {}, {}
-	
-	-- TODO: check type
-	gGeoViews = gGraphNodePool -- I'm hoping I can just ignore C memory management.
-	
-	graphNode.views = gGeoViews
-	graphNode.numViews = gGeoNumViews
-	
-	for i = 0, gGeoNumViews do
-		gGeoViews[i] = nil
+function GeoLayout:branch(args)
+	if args[1] == 1 then
+		self:next()
+		table.insert(self.gGeoLayoutStack, self.sCurrentLayout)
 	end
 	
-	--register_scene_graph_node(graphNode.node)
-	
-	return CMD_NEXT()
+	self.sCurrentLayout = {index = 0, layout = args[2]}
 end
 
--- 0x09: Create orthographic projection scene graph node
-local function geo_layout_cmd_node_ortho_projection(scale)
-	local graphNode
-	scale = scale / 100.0
-	
-	--graphNode = init_graph_node_ortho_projection(gGraphNodePool, nil, scale)
-	
-	--register_scene_graph_node(graphNode.node)
-	
-	return CMD_NEXT()
+-- renamed from 'return'
+function GeoLayout:pop(args)
+	self.sCurrentLayout = table.remove(self.gGeoLayoutStack)
 end
 
--- 0x0A: Create camera frustum scene graph node
-local function geo_layout_cmd_node_perspective(fov, near, far, func)
-	local graphNode
-	local frustumFunc = func
+function GeoLayout:node_screen_area(args) -- node_root
+	do return self:next() end -- TODO: unstub all of GeoLayout
 	
-	--graphNode = init_graph_node_perspective(gGraphNodePool, nil, fov, near, far, frustumFunc, 0)
+	local _, x, y, width, height = unpack(args)
+	local i = 0
 	
-	--register_scene_graph_node(graphNode.fnNode.node)
+	self.gGeoNumViews = args[1] + 2
 	
-	return CMD_NEXT()
+	local graphNode = GraphNode:init_graph_node_root(nil, nil, 0, x, y, width, height)
+	
+	--self.gGeoViews = {}
+	
+	grapgNode.numViews = self.gGeoNumViews
+	
+	self.gGeoViews = Array(self.gGeoNumViews):fill(false):destroy() -- TODO: is this necessary?
+	graphNode.views = self.gGeoViews
+	
+	GraphNode:register_scene_graph_Node(self, graphNode)
+	
+	self:next()
 end
 
--- 0x0C: Create zbuffer-toggling scene graph node
-local function geo_layout_cmd_node_master_list(enable)
-	local graphNode
-	
-	--graphNode = init_graph_node_master_list(gGraphNodePool, nil, enable)
-	
-	--register_scene_graph_node(graphNode.node)
-	
-	return CMD_NEXT()
+function GeoLayout:open_node(args)
+	self.gCurGraphNodeIndex = self.gCurGraphNodeIndex+1
+	table.insert(self.gCurGraphNodeList, self.gCurGraphNodeList[self.gCurGraphNodeIndex])
+	self:next()
 end
 
--- 0x0F: Create a camera scene graph node (GraphNodeCamera). The focus sets the Camera's areaCen position.
-local function geo_layout_cmd_node_camera(type, x1, y1, z1, x2, y2, z2, func)
-	local graphNode
-	
-	local pos, focus
-	
-	pos = Vector(x1, y1, z1)
-	focus = Vector(x2, y2, z2)
-	
-	--[[graphNode = init_graph_node_camera(
-		gGraphNodePool, nil, pos, focus,
-		func, type
-	)
-	
-	register_scene_graph_node(graphNode.fnNode.node)
-	
-	gGeoViews[1] = graphNode.fnNode.node]]
-	
-	return CMD_NEXT()
+function GeoLayout:close_node(args)
+	self.gCurGraphNodeIndex = self.gCurGraphNodeIndex-1
+	self:next()
 end
 
--- 0x18: Create dynamically generated displaylist scene graph node
-local function geo_layout_cmd_node_generated(param, func)
-	local graphNode
-	
-	--[[graphNode = init_graph_node_generated(
-		gGraphNodePool, nil,
-		func, -- asm function
-		param -- parameter
-	)
-	
-	register_scene_graph_node(graphNode.fnNode.node)]]
-	
-	return CMD_NEXT()
+function GeoLayout:node_master_list(args) -- zbuffer?
+	local graphNode = GraphNode:init_graph_node_master_list(nil, nil, args[1])
+	GraphNode:register_scene_graph_node(self, graphNode)
+	self:next()
 end
 
--- 0x19: Create background scene graph node
-local function geo_layout_cmd_node_background(background, func)
-	local graphNode
+function GeoLayout:display_list(args)
+	local drawingLayer = args[1]
+	local displaylist = args[2]
 	
-	--[[
-	graphNode = init_graph_node_background(
-		gGraphNodePool, nil,
-		background, -- background ID, or RGBA5551 color if asm function is null
-		func, -- asm function
-		0
-	)
+	local graphNode = GraphNode:init_graph_node_display_list(drawingLayer, displaylist)
 	
-	register_scene_graph_node(graphNode.fnNode.node)]]
+	GraphNode:register_scene_graph_node(self, graphNode)
 	
-	return CMD_NEXT()
+	self:next()
 end
 
-local GeoLayoutJumpTable = {
-	[0x00] = geo_layout_cmd_branch_and_link,
-	[0x01] = geo_layout_cmd_end,
-	[0x02] = geo_layout_cmd_branch,
-	[0x03] = geo_layout_cmd_return,
-	[0x04] = geo_layout_cmd_open_node,
-	[0x05] = geo_layout_cmd_close_node,
-	[0x06] = geo_layout_cmd_assign_as_view,
-	[0x07] = geo_layout_cmd_update_node_flags,
-	[0x08] = geo_layout_cmd_node_root,
-	[0x09] = geo_layout_cmd_node_ortho_projection,
-	[0x0A] = geo_layout_cmd_node_perspective,
-	[0x0B] = geo_layout_cmd_node_start,
-	[0x0C] = geo_layout_cmd_node_master_list,
-	[0x0D] = geo_layout_cmd_node_level_of_detail,
-	[0x0E] = geo_layout_cmd_node_switch_case,
-	[0x0F] = geo_layout_cmd_node_camera,
-	[0x10] = geo_layout_cmd_node_translation_rotation,
-	[0x11] = geo_layout_cmd_node_translation,
-	[0x12] = geo_layout_cmd_node_rotation,
-	[0x13] = geo_layout_cmd_node_animated_part,
-	[0x14] = geo_layout_cmd_node_billboard,
-	[0x15] = geo_layout_cmd_node_display_list,
-	[0x16] = geo_layout_cmd_node_shadow,
-	[0x17] = geo_layout_cmd_node_object_parent,
-	[0x18] = geo_layout_cmd_node_generated,
-	[0x19] = geo_layout_cmd_node_background,
-	[0x1A] = geo_layout_cmd_nop,
-	[0x1B] = geo_layout_cmd_copy_view,
-	[0x1C] = geo_layout_cmd_node_held_obj,
-	[0x1D] = geo_layout_cmd_node_scale,
-	[0x1E] = geo_layout_cmd_nop2,
-	[0x1F] = geo_layout_cmd_nop3,
-	[0x20] = geo_layout_cmd_node_culling_radius,
-}
+function GeoLayout:node_render_object_parent(args)
+	local graphNode = GraphNode:init_graph_node_object_parent(self.gObjParentGraphNode)
+	
+	GraphNode:register_scene_graph_node(self, graphNode)
+	
+	self:next()
+end
 
-function process_geo_layout(pool, segptr)
-	-- set by register_scene_graph_node when gCurGraphNodeIndex is 0
-	-- and gCurRootGraphNode is NULL
-	gCurRootGraphNode = nil
+function GeoLayout:node_animated_part(args)
+	local drawingLayer = args[1]
+	local translation = Vector(args[2], args[3], args[4])
+	local displayList = args[5]
 	
-	gGeoNumViews = 0
+	local graphNode = GraphNode:init_graph_node_animated_part(drawingLayer, displayList, translation)
+	GraphNode:register_scene_graph_node(self, graphNode)
+	self:next()
+end
+
+function GeoLayout:node_ortho(args)
+	local scale = args[1] / 100.0
 	
-	gCurGraphNodeList[1] = 0
-	gCurGraphNodeIndex = 0 -- incremented by cmd_open_node, decremented by cmd_close_node
+	local graphNode = GraphNode:init_graph_node_ortho(nil, nil, scale)
+	GraphNode:register_scene_graph_node(self, graphNode)
+	self:next()
+end
+
+function GeoLayout:node_perspective(args)
+	--if args[4] then -- optional 4th function argument
+	--end
+	local graphNode = GraphNode:init_graph_node_perspective(nil, nil, args[1], args[2], args[3], args[4], 0)
+	GraphNode:register_scene_graph_node(self, graphNode)
+	self:next()
+end
+
+function GeoLayout:node_camera(args)
+	local cameraType = args[1]
+	local func = args[8]
+	local argIndex = 1
+	local pos, focus = {}, {}
 	
-	gGeoLayoutStackIndex = 2
-	gGeoLayoutReturnIndex = 2 -- stack index is often copied here?
+	argIndex = argIndex+copy3argsToObject(pos, argIndex, args)
+	argIndex = argIndex+copy3argsToObject(focus, argIndex, args)
 	
-	gGeoLayoutCommands = segptr
-	gGeoLayoutCommand = gGeoLayoutCommands[gGeoLayoutCommandOffset]
-	assertf(gGeoLayoutCommand, "failed to find gGeoLayoutCommand at offset %d in %q", gGeoLayoutCommandOffset, tostring(gGeoLayoutCommands))
+	local graphNode = GraphNode:init_graph_node_camera(nil, nil, pos, focus, func, cameraType)
+	GraphNode:register_scene_graph_node(self, graphNode)
+	self.gGeoViews[1] = graphNode
+	self:next()
+end
+
+function GeoLayout:node_generated(args)
+	local param, theFunc, funcClass = unpack(args)
 	
-	gGraphNodePool = pool
-	
-	gGeoLayoutStack[1] = 0
-	gGeoLayoutStack[2] = 0
-	
-	while gGeoLayoutCommand ~= nil do
-		--GeoLayoutJumpTable[gGeoLayoutCommand[0x00]](unpack(gGeoLayoutCommand))
-		-- [[
-		assertf(
-			GeoLayoutJumpTable[gGeoLayoutCommand[0x00]],
-			"no such geo command 0x%02X at %d in %s", gGeoLayoutCommand[0x00], gGeoLayoutCommandOffset, _GR[gGeoLayoutCommands]
-		)(unpack(gGeoLayoutCommand))
-		--]]
-		coroutine.yield()
+	-- allow deferred linking:
+	-- GEO_ASM(0, 'MarioMisc.geo_mario_head_rotation')
+	if type(theFunc) == 'string' then
+		local func
+		local parts = string.explode('.', theFunc)
+		if #parts == 1 then
+			func = gLinker[theFunc]
+			funcClass = nil
+		else
+			funcClass = gLinker[parts[1]]
+			func = funcClass[parts[2]]
+		end
+		if not func then
+			errorf("deferred node_generated function not found: %s", theFunc)
+		end
+		theFunc = func
+	end
+	if not theFunc then
+		printf("node_generated: skipping\n")
 	end
 	
-	gCurRootGraphNode = gCurRootGraphNode or {views={}}
-	return gCurRootGraphNode
+	local graphNode = GraphNode:init_graph_node_generated(nil, nil, theFunc, param, funcClass)
+	GraphNode:register_scene_graph_node(self, graphNode)
+	self:next()
 end
+
+function GeoLayout:node_background(args)
+	local graphNode = GraphNode:init_graph_node_background(nil, nil, args[1], arg[2], 0)
+	GraphNode:register_scene_graph_node(self, graphNode)
+	self:next()
+end
+
+function GeoLayout:node_switch_case(args)
+	local graphNode = GraphNode:init_graph_node_switch_case(args[1], nil, args[2], arg[3])
+	GraphNode:register_scene_graph_node(self, graphNode)
+	self:next()
+end
+
+function GeoLayout:node_culling_radius(args)
+	local graphNode = GraphNode:init_graph_node_culling_radius(args[1])
+	GraphNode:register_scene_graph_node(self, graphNode)
+	self:next()
+end
+
+function GeoLayout:node_render_range(args)
+	local graphNode = GraphNode:init_graph_Node_render_range(args[1], arg[2])
+	GraphNode:register_scene_graph_node(self, graphNode)
+	self:next()
+end
+
+function GeoLayout:node_shadow(args)
+	local shadowType = args[1]
+	local shadowSolidity = args[2]
+	local shadowScale = args[3]
+	
+	local graphNode = GraphNode:init_graph_node_shadow(shadowScale, shadowSolidity, shadowType)
+	GraphNode:register_scene_graph_node(self, graphNode)
+	self:next()
+end
+
+function GeoLayout:node_billboard(args)
+	local drawingLayer = 0
+	local params
+	local translation
+	local displaylist
+	
+	if args and #args > 0 then
+		params = args[1]
+		translation = Vector(args[2], args[3], args[4])
+	else
+		params = 0
+		translation = Vector(0, 0, 0)
+	end
+	
+	if bit.band(params, 0x80) ~= 0 then
+		error("more implementation needed in geo node billboard")
+	end
+	
+	local graphNode = GraphNode:init_graph_node_billboard(drawingLayer, displaylist, translation)
+	GraphNode:register_scene_graph_node(self, graphNode)
+	self:next()
+end
+
+function GeoLayout:node_scale(args)
+	local drawingLayer = 0
+	local params = args[1]
+	local scale = args[2] / 65536.0
+	local displaylist
+	
+	if bit.band(params, 0x80) ~= 0 then
+		error("more implementation needed in geo scale")
+	end
+	
+	local graphNode = GraphNode:init_graph_node_scale(drawingLayer, displaylist, scale)
+	GraphNode:register_scene_graph_node(self, graphNode)
+	self:next()
+end
+
+-- layer, rx, ry, rz <, dl>
+function GeoLayout:node_rotation(args)
+	local drawingLayer = args[1]
+	local rot = Angle(args[2], args[3], args[4])
+	local displayList = args[5]
+	
+	--if bit.band(params, 0x80) ~= 0 then
+	--	error("unimplemented feature in node rotation")
+	--end
+	
+	local graphNode = GraphNode:init_graph_node_rotation(drawingLayer, displayList, rot)
+	GraphNode:register_scene_graph_node(self, graphNode)
+	self:next()
+end
+
+-- layer, tx, ty, tz <, dl>
+function GeoLayout:node_translate(args)
+	local drawingLayer = args[1]
+	local trans = Vector(args[2], args[3], args[4])
+	local displayList = args[5]
+	
+	--if bit.band(params, 0x80) ~= 0 then
+	--	error("unimplemented feature in node translate")
+	--end
+	
+	local graphNode = GraphNode:init_graph_node_translation(drawingLayer, displayList, trans)
+	GraphNode:register_scene_graph_node(self, graphNode)
+	self:next()
+end
+
+-- layer, tx, ty, tz <, dl>
+function GeoLayout:node_translate_rotate(args)
+	local drawingLayer = args[1]
+	local trans = Vector(args[2], args[3], args[4])
+	local rot = Angle(args[5], args[6], args[7])
+	local displayList = args[8]
+	
+	--if bit.band(params, 0x80) ~= 0 then
+	--	error("unimplemented feature in node translate")
+	--end
+	
+	local graphNode = GraphNode:init_graph_node_translation_rotation(drawingLayer, displayList, trans, rot)
+	GraphNode:register_scene_graph_node(self, graphNode)
+	self:next()
+end
+
+function GeoLayout:node_start(args)
+	local graphNode = GraphNode:init_graph_node_start()
+	GraphNode:register_scene_graph_node(self, graphNode)
+	self:next()
+end
+
+function GeoLayout:node_end(args)
+	self.gGeoLayoutStackIndex = self.gGeoLayoutReturnIndex
+	self.gGeoLayoutStackIndex = self.gGeoLayoutStackIndex-1
+	self.gGeoLayoutReturnIndex = self.gGeoLayoutStack[self.gGeoLayoutStackIndex] -- ??
+	self.gCurGraphNodeIndex = self.gGeoLayoutStack[self.gGeoLayoutStackIndex] -- ?
+	self.gGeoLayoutStackIndex = self.gGeoLayoutStackIndex-1
+	self.gGeoLayoutCommand = self.gGeoLayoutStack[self.gGeoLayoutStackIndex]
+	self:next()
+end
+
+-- param, ux, uy, uz, nodeFunc
+function GeoLayout:node_held_object(args)
+	local offset = Vector(args[2], args[3], args[4])
+	local nodeFunc = args[5]
+	
+	local graphNode = GraphNode:init_graph_node_held_oject(nil, nil, offset, nodeFunc)
+	GraphNode:register_scene_graph_node(self, graphNode)
+	self:next()
+end
+
+function GeoLayout:process_geo_layout(geoLayout)
+	if type(geoLayout) == 'function' then
+		geoLayout = geoLayout()
+	end
+	
+	self.sCurrentLayout.layout = geoLayout
+	self.sCurrentLayout.index = 0
+	
+	-- set a bunch of other initial globals
+	self.gCurRootGraphNode = nil
+	self.gGeoNumViews = 0
+	
+	self.gCurGraphNodeList = {0}
+	self.gCurGraphNodeIndex = 0
+	
+	self.gGeoLayoutStackIndex = 2
+	self.gGeoLayoutReturnIndex = 2 -- stack index is often copied here?
+	
+	self.gGeoLayoutStack = {0, 0}
+	
+	while self.sCurrentLayout.index < #self.sCurrentLayout.layout+(self.sCurrentLayout.layout[0] and 1 or 0) do
+		local cmd = self.sCurrentLayout.layout[self.sCurrentLayout.index]
+		if not cmd then
+			error(sprintf("geo layout out of bounds at %d in %q", self.sCurrentLayout.index, _GR[self.sCurrentLayout.commands]))
+		elseif cmd[0] then
+			self[cmd[0]](self, unpack(cmd))
+		else
+			cmd.command(self, cmd.args)
+		end
+	end
+end
+
+_G.GeoLayout = GeoLayout.new()
+
+local function wrap(dst, src)
+	src = src or GeoLayout['node_'..string.lower(dst)]
+	assertf(src, "failed to wrap %q for GeoLayout", dst)
+	dst = 'GEO_'..dst
+	_GR[src] = dst
+	_G[dst] = function(...)
+		return {command=src, args={...}}
+	end
+end
+wrap('ANIMATED_PART')
+wrap('ASM', GeoLayout.node_generated)
+wrap('BACKGROUND', GeoLayout.node_generated)
+wrap('BILLBOARD')
+wrap('BRANCH', GeoLayout.branch)
+wrap('BRANCH_AND_LINK', GeoLayout.branch_and_link)
+wrap('CAMERA')
+wrap('CAMERA_FRUSTRUM_WITH_FUNC', GeoLayout.node_perspective)
+wrap('CLOSE_NODE', GeoLayout.close_node)
+wrap('CULLING_RADIUS')
+wrap('DISPLAY_LIST', GeoLayout.display_list)
+wrap('END')
+wrap('HELD_OBJECT')
+wrap('NODE_SCREEN_AREA', GeoLayout.node_screen_area)
+wrap('NODE_ORTHO', GeoLayout.node_ortho)
+wrap('NODE_START', GeoLayout.node_start)
+wrap('OPEN_NODE', GeoLayout.open_node)
+wrap('RENDER_OBJ', GeoLayout.node_render_object_parent)
+wrap('RENDER_RANGE')
+wrap('RETURN', GeoLayout.pop)
+wrap('ROTATION_NODE', GeoLayout.node_rotation)
+wrap('SCALE')
+wrap('SHADOW')
+wrap('SWITCH_CASE')
+wrap('TRANSLATE_NODE', GeoLayout.node_translate)
+wrap('TRANSLATE_ROTATE')
+wrap('ZBUFFER', GeoLayout.node_master_list)

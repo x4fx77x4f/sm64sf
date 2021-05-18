@@ -1,5 +1,29 @@
 -- https://hack64.net/wiki/doku.php?id=super_mario_64:level_commands
 
+OP_AND = 0
+OP_NAND = 1
+OP_EQ = 2
+OP_NEQ = 3
+OP_LT = 4
+OP_LEQ = 5
+OP_GT = 6
+OP_GEQ = 7
+
+OP_SET = 0
+OP_GET = 1
+
+VAR_CURR_SAVE_FILE_NUM = 0
+VAR_CURR_COURSE_NUM = 1
+VAR_CURR_ACT_NUM = 2
+VAR_CURR_LEVEL_NUM = 3
+VAR_CURR_AREA_INDEX = 4
+
+WARP_CHECKPOINT = 0x80
+WARP_NO_CHECKPOINT = 0x00
+
+REGULAR_FACE = 0x0002
+DIZZY_FACE = 0x0003
+
 local DEGREES = math.deg -- may have to change...
 
 local SCRIPT_RUNNING = 1
@@ -19,27 +43,6 @@ function LevelCommands.new()
 	self.sCurrentScript = {}
 	self.sRegister = nil
 	
-	self.REGULAR_FACE = 0x0002
-	self.DIZZY_FACE = 0x0003
-	
-	self.OP_AND = 0
-	self.OP_NAND = 1
-	self.OP_EQ = 2
-	self.OP_NEQ = 3
-	self.OP_LT = 4
-	self.OP_LEQ = 5
-	self.OP_GT = 6
-	self.OP_GEQ = 7
-	
-	self.OP_SET = 0
-	self.OP_GET = 1
-	
-	self.VAR_CURR_SAVE_FILE_NUM = 0
-	self.VAR_CURR_COURSE_NUM = 1
-	self.VAR_CURR_ACT_NUM = 2
-	self.VAR_CURR_LEVEL_NUM = 3
-	self.VAR_CURR_AREA_INDEX = 4
-	
 	self.sStackTop = {}
 	
 	return self
@@ -50,18 +53,18 @@ function LevelCommands:next()
 end
 
 function LevelCommands:load_mio0()
-	self.sCurrentScript.index = self.sCurrentScript.index+1
+	self:next()
 end
 
 function LevelCommands:load_raw()
-	self.sCurrentScript.index = self.sCurrentScript.index+1
+	self:next()
 end
 
 function LevelCommands:init_level()
 	--GeoLayout.gObjParentGraphNode = init_graph_node_start(nil, GeoLayout.gObjParentGraphNode)
 	--ObjectListProcessor:clear_objects()
 	--Area:clear_areas()
-	self.sCurrentScript.index = self.sCurrentScript.index+1
+	self:next()
 end
 
 function LevelCommands:init_mario(model, bharg, bhscript)
@@ -74,7 +77,7 @@ function LevelCommands:init_mario(model, bharg, bhscript)
 		unk18 = Area.gLoadedGraphNodes[model]
 	})
 	
-	self.sCurrentScript.index = self.sCurrentScript.index+1
+	self:next()
 end
 
 function LevelCommands:load_model_from_geo(model, geo)
@@ -84,17 +87,17 @@ function LevelCommands:load_model_from_geo(model, geo)
 	
 	Area.gLoadedGraphNodes[model] = GeoLayout:process_geo_layout(geo).node
 	
-	self.sCurrentScript.index = self.sCurrentScript.index+1
+	self:next()
 end
 
-function LevelCommands:load_model_from_geo(model, dl, layer)
+function LevelCommands:load_model_from_dl(model, dl, layer)
 	if model < 256 then
 		Area.gLoadedGraphNodes[model] = GeoLayout:init_graph_node_display_list(layer, dl).node
 	else
 		error("invalid gLoadedGraphNodes index - load model from dl")
 	end
 	
-	self.sCurrentScript.index = self.sCurrentScript.index+1
+	self:next()
 end
 
 function LevelCommands:set_mario_pos(area, yaw, x, y, z)
@@ -106,13 +109,13 @@ function LevelCommands:set_mario_pos(area, yaw, x, y, z)
 		startAngle = Angle(0, yaw, 0)
 	})
 	
-	self.sCurrentScript.index = self.sCurrentScript.index+1
+	self:next()
 end
 
 function LevelCommands:load_mario_head(id)
 	GoddardRenderer:gdm_setup()
 	GoddardRenderer:gdm_maketestdl(id)
-	self.sCurrentScript.index = self.sCurrentScript.index+1
+	self:next()
 end
 
 function LevelCommands:exit() end
@@ -125,7 +128,7 @@ function LevelCommands:sleep(delay)
 	else
 		self.sDelayFrames = self.sDelayFrames-1
 		if self.sDelayFrames == 0 then
-			self.sCurrentScript.index = self.sCurrentScript.index+1
+			self:next()
 			self.sScriptStatus = SCRIPT_RUNNING
 		end
 	end
@@ -139,14 +142,14 @@ function LevelCommands:sleep2(delay)
 	else
 		self.sDelayFrames2 = self.sDelayFrames2-1
 		if self.sDelayFrames2 == 0 then
-			self.sCurrentScript.index = self.sCurrentScript.index+1
+			self:next()
 			self.sScriptStatus = SCRIPT_RUNNING
 		end
 	end
 end
 
 function LevelCommands:blackout(bool)
-	self.sCurrentScript.index = self.sCurrentScript.index+1
+	self:next()
 end
 
 function LevelCommands:set_register(value)
@@ -154,7 +157,7 @@ function LevelCommands:set_register(value)
 		value = value()
 	end
 	self.sRegister = value
-	self.sCurrentScript.index = self.sCurrentScript.index+1
+	self:next()
 end
 
 function LevelCommands:eval_script_op(op, arg)
@@ -179,7 +182,7 @@ end
 
 function LevelCommands:call(arg, func, funcClass)
 	self.sRegister = func(funcClass, arg, self.sRegister)
-	self.sCurrentScript.index = self.sCurrentScript.index+1
+	self:next()
 end
 
 function LevelCommands:call_loop(arg, func, funcClass)
@@ -188,37 +191,37 @@ function LevelCommands:call_loop(arg, func, funcClass)
 		self.sScriptStatus = SCRIPT_PAUSED
 	else
 		self.sScriptStatus = SCRIPT_RUNNING
-		self.sCurrentScript.index = self.sCurrentScript.index+1
+		self:next()
 	end
 end
 
 function LevelCommands:alloc_level_pool()
-	self.sCurrentScript.index = self.sCurrentScript.index+1
+	self:next()
 end
 
 function LevelCommands:free_level_pool()
-	self.sCurrentScript.index = self.sCurrentScript.index+1
+	self:next()
 end
 
 function LevelCommands:get_area(what)
 	self.sRegister = Area[what]
-	self.sCurrentScript.index = self.sCurrentScript.index+1
+	self:next()
 end
 
 function LevelCommands:set_area(what, value)
 	Area[what] = self.sRegister
-	self.sCurrentScript.index = self.sCurrentScript.index+1
+	self:next()
 end
 
 function LevelCommands:load_area(areaIndex)
 	--Area:load_area(areaIndex)
-	self.sCurrentScript.index = self.sCurrentScript.index+1
+	self:next()
 end
 
 function LevelCommands:unload_area(what, value)
 	--Area:clear_areas()
 	-- clear_area_graph_nodes -- call all node functions with init and clear command
-	self.sCurrentScript.index = self.sCurrentScript.index+1
+	self:next()
 end
 
 function LevelCommands:begin_area(areaIndex, geoLayout)
@@ -236,7 +239,7 @@ function LevelCommands:begin_area(areaIndex, geoLayout)
 		end
 	end
 	
-	self.sCurrentScript.index = self.sCurrentScript.index+1
+	self:next()
 end
 
 function LevelCommands:place_object(model, x, y, z, pitch, yaw, rot, bharg, bhscript, act)
@@ -258,7 +261,7 @@ function LevelCommands:place_object(model, x, y, z, pitch, yaw, rot, bharg, bhsc
 		Area.gAreas[self.sCurrAreaIndex].objectSpawnInfos = spawnInfo
 	end
 	
-	self.sCurrentScript.index = self.sCurrentScript.index+1
+	self:next()
 end
 
 function LevelCommands:macro_objects(data)
@@ -266,7 +269,7 @@ function LevelCommands:macro_objects(data)
 		Area.gAreas[self.sCurrAreaIndex].macroObjects = data
 	end
 	
-	self.sCurrentScript.index = self.sCurrentScript.index+1
+	self:next()
 end
 
 function LevelCommands:rooms(rms)
@@ -274,7 +277,7 @@ function LevelCommands:rooms(rms)
 		Area.gAreas[self.sCurrAreaIndex].surfaceRooms = rms
 	end
 	
-	self.sCurrentScript.index = self.sCurrentScript.index+1
+	self:next()
 end
 
 function LevelCommands:terrain(data)
@@ -282,7 +285,7 @@ function LevelCommands:terrain(data)
 		Area.gAreas[self.sCurrAreaIndex].terrainData = data
 	end
 	
-	self.sCurrentScript.index = self.sCurrentScript.index+1
+	self:next()
 end
 
 function LevelCommands:terrain_type(data)
@@ -290,12 +293,12 @@ function LevelCommands:terrain_type(data)
 		Area.gAreas[self.sCurrAreaIndex].terrainType = data
 	end
 	
-	self.sCurrentScript.index = self.sCurrentScript.index+1
+	self:next()
 end
 
 function LevelCommands:end_area(data)
 	self.sCurrAreaIndex = -1
-	self.sCurrentScript.index = self.sCurrentScript.index+1
+	self:next()
 end
 
 function LevelCommands:transition(transType, time, red, green, blue)
@@ -303,18 +306,19 @@ function LevelCommands:transition(transType, time, red, green, blue)
 		Area:play_transition(transType, time, red, green, blue)
 	end
 	
-	self.sCurrentScript.index = self.sCurrentScript.index+1
+	self:next()
 end
 
 function LevelCommands:cleardemoptr()
 	Game.gCurrDemoInput = nil
-	self.sCurrentScript.index = self.sCurrentScript.index+1
+	self:next()
 end
 
 function LevelCommands:execute(script)
 	if type(script) == 'function' then
 		script = script()
 	end
+	assertf(script, "tried to execute non-existent level script from %d in %q", self.sCurrentScript.index, _GR[self.sCurrentScript.commands])
 	self:start_new_script(script)
 end
 
@@ -324,8 +328,9 @@ function LevelCommands:jump_link(script)
 	elseif type(script) == 'function' then
 		script = script()
 	end
+	assertf(script, "tried to jump_link non-existent level script from %d in %q", self.sCurrentScript.index, _GR[self.sCurrentScript.commands])
 	
-	self.sCurrentScript.index = self.sCurrentScript.index+1
+	self:next()
 	table.insert(self.sStackTop, {commands = self.sCurrentScript.commands, index = self.sCurrentScript.index})
 	self:start_new_script(script)
 end
@@ -336,12 +341,12 @@ function LevelCommands:jump_if(op, arg, script)
 	if self:eval_script_op(op, arg) then
 		self:start_new_script(script)
 	else
-		self.sCurrentScript.index = self.sCurrentScript.index+1
+		self:next()
 	end
 end
 
 -- Renamed from 'return' because that is a reserved keyword.
-function LevelCommands:return_link()
+function LevelCommands:pop()
 	self.sCurrentScript = table.remove(self.sStackTop)
 end
 
@@ -354,10 +359,9 @@ function LevelCommands:level_script_execute()
 	self.sScriptStatus = SCRIPT_RUNNING
 	
 	while self.sScriptStatus == SCRIPT_RUNNING do
+		assertf(type(self.sCurrentScript.commands) == 'table', "level script doesn't exist")
 		local cmd = self.sCurrentScript.commands[self.sCurrentScript.index]
-		if not cmd then
-			error(sprintf("out of bounds at %d in %q", self.sCurrentScript.index, _GR[self.sCurrentScript.commands]))
-		end
+		assertf(cmd, "level script out of bounds at %d in %q", self.sCurrentScript.index, _GR[self.sCurrentScript.commands])
 		cmd.command(self, unpack(cmd.args or {}))
 	end
 	
@@ -370,6 +374,8 @@ _G.LevelCommands = LevelCommands.new()
 
 local function wrap(dst, src)
 	src = src or LevelCommands[string.lower(dst)]
+	assertf(src, "failed to wrap %q for LevelCommands", dst)
+	_GR[src] = dst
 	_G[dst] = function(...)
 		return {command=src, args={...}}
 	end
@@ -398,7 +404,7 @@ wrap('MARIO_POS', LevelCommands.set_mario_pos)
 wrap('MACRO_OBJECTS')
 wrap('OBJECT', LevelCommands.place_object)
 wrap('OBJECT_WITH_ACTS', LevelCommands.place_object)
-wrap('RETURN', LevelCommands.return_link)
+wrap('RETURN', LevelCommands.pop)
 wrap('SET_REGISTER')
 wrap('SLEEP')
 wrap('SLEEP_BEFORE_EXIT', LevelCommands.sleep2)
@@ -409,7 +415,13 @@ wrap('UNLOAD_AREA')
 -- non-sm64js
 wrap('CMD2A', LevelCommands.unload_area)
 wrap('CLEAR_LEVEL', LevelCommands.next)
-wrap('EXIT_AND_EXECUTE', LevelCommands.execute) -- sm64js uses EXECUTE in place of EXIT_AND_EXECUTE for level_intro_entry_1
+wrap('EXIT_AND_EXECUTE', function(self, seg, script, scriptEnd, entry)
+	-- sm64js uses EXECUTE in place of EXIT_AND_EXECUTE for level_intro_entry_1
+	return self:execute(entry)
+end)
 wrap('FIXED_LOAD', LevelCommands.next)
+wrap('SET_MENU_MUSIC', LevelCommands.next)
 wrap('SET_REG', LevelCommands.set_register)
+wrap('STOP_MUSIC', LevelCommands.next)
 wrap('JUMP', LevelCommands.execute) -- probably closest to n64decomp/sm64 JUMP
+wrap('JUMP_IF')

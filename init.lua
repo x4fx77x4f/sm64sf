@@ -4,7 +4,7 @@
 
 sprintf = string.format
 function printf(...)
-	return print(sprintf(...))
+	return pcall(printMessage, 2, sprintf(...))
 end
 function errorf(...)
 	return error(sprintf(...))
@@ -93,6 +93,33 @@ function SF_BOR(...)
 	return n
 end
 
+-- JS compatibility
+local ArrayMeta = {}
+ArrayMeta.__index = ArrayMeta
+function ArrayMeta:fill(n)
+	for i=1, self._array_max do
+		self[i] = n
+	end
+	return self
+end
+function ArrayMeta:map(func)
+	for k, v in pairs(self) do
+		if k ~= '_array_max' then
+			self[k] = func(k, v) or self[k]
+		end
+	end
+	return self
+end
+function ArrayMeta:destroy()
+	self._array_max = nil
+	setmetatable(self, nil)
+	return self
+end
+function Array(n)
+	return setmetatable({
+		_array_max = n
+	}, ArrayMeta)
+end
 -- https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign
 function table.assign(target, ...)
 	for i=1, select('#', ...) do
@@ -121,6 +148,8 @@ local function init(initial)
 	hook.remove('starfallUsed', 'consent')
 	hook.remove('permissionrequest', 'consent')
 	
+	_GR = setmetatable({}, {__mode='k'})
+	
 	-- Load order is going to become a problem. I have no doubt that at some
 	-- point an impossible load order will be required, and when that
 	-- happens, it's going to fucking suck.
@@ -136,6 +165,8 @@ local function init(initial)
 	require('sm64sf/include/gfx_dimensions.lua')
 	--@include sm64sf/include/pr/gbi.lua
 	require('sm64sf/include/pr/gbi.lua')
+	--@include sm64sf/include/segment_symbols.lua
+	require('sm64sf/include/segment_symbols.lua')
 	
 	--@include sm64sf/src/init.lua
 	require('sm64sf/src/init.lua')
@@ -173,9 +204,10 @@ local function init(initial)
 	--@include sm64sf/levels/entry.lua
 	require('sm64sf/levels/entry.lua')
 	
-	_GR = setmetatable({}, {__mode='kv'})
 	for k, v in pairs(_G) do
-		_GR[v] = tostring(k)
+		if _GR[v] == nil then
+			_GR[v] = tostring(k)
+		end
 	end
 	
 	Game:initialize()
@@ -191,7 +223,6 @@ hook.add('starfallUsed', 'consent', function(activator, used)
 	if activator ~= player() then
 		return
 	end
-	hook.remove('starfallUsed', 'consent')
 	init()
 end)
 hook.add('permissionrequest', 'consent', init)

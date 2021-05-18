@@ -35,6 +35,8 @@ local function scaleFit(w1, h1, w2, h2)
 end
 
 local function on_anim_frame()
+	render.setBackgroundColor(Color(31, 31, 31))
+	
 	dbgStr, dbgStrLines = "", 0
 		
 	local now = timer.systime()
@@ -60,7 +62,20 @@ local function on_anim_frame()
 	-- debug text
 	dbgprintf("fps: %d", fps)
 	dbgprintf("quota: %d%%", math.ceil(quotaAverage()/quotaMax()*100))
-	dbgprintf("script: 0x%02X is %d at %d in %s", sCurrentCmd and sCurrentCmd.type or -1, sScriptStatus or -2, sCurrentCmdOffset or -1, _GR[sCurrentCmds] or "nil")
+	
+	local lvlcmd = LevelCommands.sCurrentScript
+	local _GR2 = {
+		[1] = "running",
+		[0] = "sleeping",
+		[-1] = "sleeping before exit",
+	}
+	dbgprintf(
+		"LvlCmds: %s is %s at #%d doing %s",
+		_GR[lvlcmd.commands] or "[???]",
+		_GR2[LevelCommands.sScriptStatus] or "[???]",
+		lvlcmd.index or -1,
+		lvlcmd.commands[lvlcmd.index] and _GR[lvlcmd.commands[lvlcmd.index].command] or "[???]"
+	)
 	-- [[
 	dbgStr = string.gsub(dbgStr, "\n$", "")
 	render.setFont('DebugFixed')
