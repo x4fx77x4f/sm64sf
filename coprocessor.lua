@@ -248,7 +248,7 @@ function GFX.generate()
 end
 
 function GFX:flush()
-	if #self.buf_vbo > 0 then
+	if self.buf_vbo_num_tris ~= 0 then
 		mesh.generate(nil, MATERIAL.TRIANGLES, self.buf_vbo_num_tris, self.generate)
 		self.buf_vbo = {}
 		self.buf_vbo_num_tris = 0
@@ -258,10 +258,14 @@ end
 function GFX:run(commands)
 	self:sp_reset()
 	
+	render.selectRenderTarget('screen')
 	render.enableDepth(true)
-	render.clear(Color(0, 0, 0, 255), true)
+	render.clear(Color(31, 0, 31, 255), true) -- temporarily magenta so i can see if it's working
 	self:run_dl(commands)
 	self:flush()
+	render.selectRenderTarget('final')
+	render.setRenderTargetTexture('screen')
+	render.drawTexturedRect(0, 0, 1024, 1024)
 end
 
 GFX.random = 0
