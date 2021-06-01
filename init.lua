@@ -147,79 +147,92 @@ function table.find(tbl, func)
 end
 
 local thread = coroutine.create(function()
-	_GR = setmetatable({}, {__mode='k'})
-	
-	-- Load order is going to become a problem. I have no doubt that at some
-	-- point an impossible load order will be required, and when that
-	-- happens, it's going to fucking suck.
-	
-	--@include sm64sf/asset_loader.lua
-	require('sm64sf/asset_loader.lua')
-	
-	--@include sm64sf/include/config.lua
-	require('sm64sf/include/config.lua')
-	--@include sm64sf/include/gfx_dimensions.lua
-	require('sm64sf/include/gfx_dimensions.lua')
-	--@include sm64sf/include/gbi.lua
-	require('sm64sf/include/gbi.lua')
-	--@include sm64sf/include/segment_symbols.lua
-	require('sm64sf/include/segment_symbols.lua')
-	
-	--@include sm64sf/src/init.lua
-	require('sm64sf/src/init.lua')
-	
-	--@include sm64sf/src/buffers/buffers.lua
-	require('sm64sf/src/buffers/buffers.lua')
-	
-	--@include sm64sf/src/engine/geo_layout.lua
-	require('sm64sf/src/engine/geo_layout.lua')
-	--@include sm64sf/src/engine/level_script.lua
-	require('sm64sf/src/engine/level_script.lua')
-	--@include sm64sf/src/engine/math_util.lua
-	require('sm64sf/src/engine/math_util.lua')
-	
-	--@include sm64sf/src/menu/intro_geo.lua
-	require('sm64sf/src/menu/intro_geo.lua')
-	--@include sm64sf/src/menu/level_select_menu.lua
-	require('sm64sf/src/menu/level_select_menu.lua')
-	
-	--@include sm64sf/src/game/area.lua
-	require('sm64sf/src/game/area.lua')
-	--@include sm64sf/src/game/game.lua
-	require('sm64sf/src/game/game.lua')
-	--@include sm64sf/src/game/geo_misc.lua
-	require('sm64sf/src/game/geo_misc.lua')
-	--@include sm64sf/src/game/object_list_processor.lua
-	require('sm64sf/src/game/object_list_processor.lua')
-	--@include sm64sf/src/game/screen_transition.lua
-	require('sm64sf/src/game/screen_transition.lua')
-	
-	--@include sm64sf/levels/intro/geo.lua
-	require('sm64sf/levels/intro/geo.lua')
-	--@include sm64sf/levels/intro/leveldata.lua
-	require('sm64sf/levels/intro/leveldata.lua')
-	--@include sm64sf/levels/intro/script.lua
-	require('sm64sf/levels/intro/script.lua')
-	--@include sm64sf/levels/scripts.lua
-	require('sm64sf/levels/scripts.lua')
-	--@include sm64sf/levels/entry.lua
-	require('sm64sf/levels/entry.lua')
-	
-	--@include sm64sf/coprocessor.lua
-	require('sm64sf/coprocessor.lua')
-	
-	for k, v in pairs(_G) do
-		if _GR[v] == nil then
-			_GR[v] = tostring(k)
+	-- Use 'xpcall' so that Starfall's unprotected coroutine.resume
+	-- doesn't get to lose our precious stack trace.
+	return xpcall(function()
+		_GR = setmetatable({}, {__mode='k'})
+		
+		-- Load order is going to become a problem. I have no doubt that at some
+		-- point an impossible load order will be required, and when that
+		-- happens, it's going to fucking suck.
+		
+		--@include sm64sf/asset_loader.lua
+		require('sm64sf/asset_loader.lua')
+		
+		--@include sm64sf/include/config.lua
+		require('sm64sf/include/config.lua')
+		--@include sm64sf/include/gfx_dimensions.lua
+		require('sm64sf/include/gfx_dimensions.lua')
+		--@include sm64sf/include/gbi.lua
+		require('sm64sf/include/gbi.lua')
+		--@include sm64sf/include/segment_symbols.lua
+		require('sm64sf/include/segment_symbols.lua')
+		
+		--@include sm64sf/src/init.lua
+		require('sm64sf/src/init.lua')
+		
+		--@include sm64sf/src/buffers/buffers.lua
+		require('sm64sf/src/buffers/buffers.lua')
+		
+		--@include sm64sf/src/engine/geo_layout.lua
+		require('sm64sf/src/engine/geo_layout.lua')
+		--@include sm64sf/src/engine/level_script.lua
+		require('sm64sf/src/engine/level_script.lua')
+		--@include sm64sf/src/engine/math_util.lua
+		require('sm64sf/src/engine/math_util.lua')
+		
+		--@include sm64sf/src/menu/intro_geo.lua
+		require('sm64sf/src/menu/intro_geo.lua')
+		--@include sm64sf/src/menu/level_select_menu.lua
+		require('sm64sf/src/menu/level_select_menu.lua')
+		
+		--@include sm64sf/src/game/area.lua
+		require('sm64sf/src/game/area.lua')
+		--@include sm64sf/src/game/game.lua
+		require('sm64sf/src/game/game.lua')
+		--@include sm64sf/src/game/geo_misc.lua
+		require('sm64sf/src/game/geo_misc.lua')
+		--@include sm64sf/src/game/object_list_processor.lua
+		require('sm64sf/src/game/object_list_processor.lua')
+		--@include sm64sf/src/game/screen_transition.lua
+		require('sm64sf/src/game/screen_transition.lua')
+		
+		--@include sm64sf/levels/intro/geo.lua
+		require('sm64sf/levels/intro/geo.lua')
+		--@include sm64sf/levels/intro/leveldata.lua
+		require('sm64sf/levels/intro/leveldata.lua')
+		--@include sm64sf/levels/intro/script.lua
+		require('sm64sf/levels/intro/script.lua')
+		--@include sm64sf/levels/scripts.lua
+		require('sm64sf/levels/scripts.lua')
+		--@include sm64sf/levels/entry.lua
+		require('sm64sf/levels/entry.lua')
+		
+		--@include sm64sf/coprocessor.lua
+		require('sm64sf/coprocessor.lua')
+		
+		for k, v in pairs(_G) do
+			if _GR[v] == nil then
+				_GR[v] = tostring(k)
+			end
 		end
-	end
-	
-	Game:initialize()
-	startGame()
-	
-	while true do
-		coroutine.yield(true)
-	end
+		
+		Game:initialize()
+		startGame()
+		
+		while true do
+			coroutine.yield(true)
+		end
+	end, function(err, st)
+		err = type(err) == 'table' and err.message or err -- Fuck off, Starfall
+		pcall(printMessage, 2,
+			"-----BEGIN ERROR OUTPUT BLOCK-----\n"..
+			--err.."\n"..
+			st.."\n"..
+			"-----END ERROR OUTPUT BLOCK-----\n"
+		)
+		error(err)
+	end)
 end)
 
 local perms = {'file.writeTemp', 'render.screen', 'render.offscreen'}
