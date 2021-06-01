@@ -231,15 +231,182 @@ function GFX:lookup_or_create_color_combiner(cc_id)
 	return new_combiner
 end
 
-function GFX:import_texture_ia16(tile)
+--function GFX:import_texture_ia8(tile) end
+--function GFX:import_texture_ia16(tile) end
+--function GFX:import_texture_rgba16(tile) end
+--function GFX:import_texture(tile) end
+--function GFX:texture_cache_lookup(tile, textureData) end
+
+function GFX:calc_and_set_viewport(viewport)
+	local width = 2.0 * viewport.vscale[1] / 4.0
+	local height = 2.0 * viewport.vscale[2] / 4.0
+	local x = (viewport.vtrans[1] / 4.0) - width / 2.0
+	local y = 240 - ((viewport.vtrans[2] / 4.0) + height / 2.0)
 	
+	width = width*2.0
+	height = height*2.0
+	x = x*2.0
+	y = y*2.0
+	
+	table.assign(self.rdp.viewport, {
+		x=x, y=y, width=width, height=height
+	})
+	
+	self.rdp.viewport_or_scissor_changed = true
 end
+
+function GFX:sp_movemem(t, data, index)
+	if t == Gbi.G_MV_L then -- load lightData
+		self.rsp.current_lights[index] = data
+	elseif t == Gbi.G_MV_VIEWPORT then
+		self:calc_and_set_viewport(data)
+	else
+		errorf("unimplemented sp_movemem type %d", t)
+	end
+end
+
+--function GFX:sp_tri1(vtx1_idx, vtx2_idx, vtx3_idx) end
+--function GFX:draw_rectangle(ulx, uly, lrx, lry)
+
+function GFX:dp_set_env_color(r, g, b, a)
+	self.rdp.env_color = {r, g, b, a}
+end
+
+function GFX:dp_set_prim_color(r, g, b, a)
+	self.rdp.prim_color = {r, g, b, a}
+end
+
+--function GFX:dp_fill_rectangle(ulx, uly, lrx, lry) end
+--function GFX:dp_texture_rectangle(ulx, uly, lrx, lry, tile, uls, ult, dsdx, dtdy, flip) end
+
+function GFX:sp_texture(s, t)
+	self.rsp.texture_scaling_factor = {s, t}
+end
+
+function GFX:sp_set_other_mode_h(category, newmode)
+	self.rdp.other_mode_h[category] = newmode
+end
+
+function GFX:sp_set_other_mode_l(newmode)
+	self.rdp.other_mode_l = bit.bor(bit.band(self.rdp.other_mode_l, 0x7), newmode)
+end
+
+--function GFX:dp_set_tile(fmt, siz, line, tmem, tile, palette, cmt, cms) end
+--function GFX:dp_set_tile_size(tile, uls, ult, lrs, lrt) end
+--function GFX:dp_set_texture_image(size, imageData) end
+--function GFX:dp_set_fog_color(r, g, b, a) end
+
+function GFX:sp_moveword(t, data)
+	if t == Gbi.G_MW_NUMLIGHT then
+		self.rsp.current_num_lights = data
+		self.rsp.lights_changed = true
+	elseif t == Gbi.G_MW_FOG then
+		self.rsp.fog_mul = data.mul
+		self.rsp.fog_offset = data.offset
+	else
+		errorf("unimplemented sp_moveword type %d", t)
+	end
+end
+
+--function GFX:dp_load_block(tile, uls, ult, lrs) end
+--function GFX:normalize_vector(v) end
+--function GFX:transposed_matrix_mul(res, a, b) end
+--function GFX:calculate_normal_dir(light, coeffs) end
+--function GFX:sp_vertex(dest_index, vertices) end
+
+GFX.opcodes = {
+	[Gbi.G_ENDDL] = function(self, args)
+		-- not used in sm64js
+	end,
+	[Gbi.G_MOVEMEM] = function(self, args)
+		self:sp_movemem(args.type, args.data, args.index)
+	end,
+	[Gbi.G_MTX] = function(self, args)
+		self:sp_matrix(args.parameters, args.matrix)
+	end,
+	[Gbi.G_VTX] = function(self, args)
+		self:sp_vertex(args.dest_index, args.vertices)
+	end,
+	[Gbi.G_TRI1] = function(self, args)
+		self:sp_tri1(args.v0, args.v1, args.v2)
+	end,
+	[Gbi.G_MOVEWORD] = function(self, args)
+		self:sp_moveword(args.type, args.data)
+	end,
+	[Gbi.G_SETGEOMETRYMODE] = function(self, args)
+		self:sp_geometry_mode(0, args.mode)
+	end,
+	[Gbi.G_CLEARGEOMETRYMODE] = function(self, args)
+		self:sp_geometry_mode(args.mode, 0)
+	end,
+	[Gbi.G_SETFOGCOLOR] = function(self, args)
+		self:dp_set_fog_color(args.r, args.g, args.g, args.a)
+	end,
+	[Gbi.G_SETOTHERMODE_H] = function(self, args)
+		self:sp_set_other_mode_h(args.category, args.newmode)
+	end,
+	[Gbi.G_SETOTHERMODE_L] = function(self, args)
+		self:sp_set_other_mode_l(args.mode)
+	end,
+	[Gbi.G_SETCOMBINE] = function(self, args)
+		local rgb = self:color_comb(args.mode.rgb[1], args.mode.rgb[2], args.mode.rgb[3], args.mode.rgb[4])
+		local alpha = self:color_comb(args.mode.alpha[1], args.mode.alpha[2], args.mode.alpha[3], args.mode.alpha[4])
+		self:dp_set_combine_mode(rgb, alpha)
+	end,
+	[Gbi.G_SETTIMG] = function(self, args)
+		self:dp_set_texture_image(args.size, args.imageData)
+	end,
+	[Gbi.G_SETTILE] = function(self, args)
+		self:dp_set_tile(args.fmt, args.siz, args.line, args.tmem, args.tile, args.palette, args.cmt, args.cms)
+	end,
+	[Gbi.G_SETTILESIZE] = function(self, args)
+		self:dp_set_tile_size(args.t, args.uls, args.ult, args.lrs, args.lrt)
+	end,
+	[Gbi.G_TEXTURE] = function(self, args)
+		self:sp_texture(args.s, args.t)
+	end,
+	[Gbi.G_LOADBLOCK] = function(self, args)
+		self:dp_load_block(args.tile, args.uls, args.ult, args.lrs)
+	end,
+	[Gbi.G_SETFILLCOLOR] = function(self, args)
+		self:dp_set_fill_color(args.color)
+	end,
+	[Gbi.G_SETENVCOLOR] = function(self, args)
+		self:dp_set_env_color(args.r, args.g, args.g, args.a)
+	end,
+	[Gbi.G_SETPRIMCOLOR] = function(self, args)
+		self:dp_set_prim_color(args.r, args.g, args.g, args.a)
+	end,
+	[Gbi.G_FILLRECT] = function(self, args)
+		self:dp_fill_rectangle(args.ulx, args.uly, args.lrx, args.lry)
+	end,
+	[Gbi.G_TEXRECT] = function(self, args)
+		self:dp_texture_rectangle(args.ulx, args.uly, args.lrx, args.lry, args.tile, args.uls, args.ult, args.dsdx, args.dtdy, false)
+	end,
+	[Gbi.G_TEXRECTFLIP] = function(self, args)
+		self:dp_texture_rectangle(args.ulx, args.uly, args.lrx, args.lry, args.tile, args.uls, args.ult, args.dsdx, args.dtdy, true)
+	end,
+	[Gbi.G_DL] = function(self, args)
+		if args.branch == 0 then
+			self:run_dl(args.childDisplayList)
+		else
+			self:run_dl(args.childDisplayList)
+			return -- what difference does this make???
+		end
+	end,
+}
 
 function GFX:run_dl(commands)
 	for i=1, #commands do
 		local command = commands[i]
 		local opcode = command.words.w0
 		local args = command.words.w1
+		local func = self.opcodes[opcode]
+		local success, err = pcall(func, self, args)
+		if not success then
+			printTable(command)
+			error(err)
+		end
 	end
 end
 
@@ -326,7 +493,7 @@ GFX.rdp = {
 	other_mode_l = 0, 
 	other_mode_h = {
 		[12] = 0, --Gbi.G_MDSFT_TEXTFILT
-		[20] = 0 --GBI.G_MDSFT_CYCLETYPE
+		[20] = 0, --Gbi.G_MDSFT_CYCLETYPE
 	},
 	combine_mode = 0,
 	env_color = { r = 0, g = 0, b = 0, a = 0 },
@@ -337,7 +504,7 @@ GFX.rdp = {
 	scissor = { x = 0, y = 0, width = 0, height = 0 },
 	viewport_or_scissor_changed = false,
 	z_buf_address = nil,
-	color_image_address = nil
+	color_image_address = nil,
 }
 
 GFX.color_combiner_pool = {}
@@ -350,7 +517,7 @@ GFX.rendering_state = {
 	viewport = {x=0, y=0, width=0, height=0},
 	scissor = {x=0, y=0, width=0, height=0},
 	shader_program = nil,
-	textures = {nil, nil}
+	textures = {nil, nil},
 }
 
 GFX.gfx_texture_cache = {pool={}}

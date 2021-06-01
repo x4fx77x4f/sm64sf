@@ -180,27 +180,27 @@ Gbi.G_BL_A_SHADE = 2
 Gbi.G_BL_1 = 2
 Gbi.G_BL_0 = 3
 
-CC_0 = 0
-CC_TEXEL0 = 1
-CC_TEXEL1 = 2
-CC_PRIM = 3
-CC_SHADE = 4
-CC_ENV = 5
-CC_TEXEL0A = 6
-CC_LOD = 7
+Gbi.CC_0 = 0
+Gbi.CC_TEXEL0 = 1
+Gbi.CC_TEXEL1 = 2
+Gbi.CC_PRIM = 3
+Gbi.CC_SHADE = 4
+Gbi.CC_ENV = 5
+Gbi.CC_TEXEL0A = 6
+Gbi.CC_LOD = 7
 
-SHADER_0 = 0
-SHADER_INPUT_1 = 1
-SHADER_INPUT_2 = 2
-SHADER_INPUT_3 = 3
-SHADER_INPUT_4 = 4
-SHADER_TEXEL0 = 5
-SHADER_TEXEL0A = 6
-SHADER_TEXEL1 = 7
+Gbi.SHADER_0 = 0
+Gbi.SHADER_INPUT_1 = 1
+Gbi.SHADER_INPUT_2 = 2
+Gbi.SHADER_INPUT_3 = 3
+Gbi.SHADER_INPUT_4 = 4
+Gbi.SHADER_TEXEL0 = 5
+Gbi.SHADER_TEXEL0A = 6
+Gbi.SHADER_TEXEL1 = 7
 
-SHADER_OPT_ALPHA = bit.lshift(1, 24)
-SHADER_OPT_FOG = bit.lshift(1, 25)
-SHADER_OPT_TEXTURE_EDGE = bit.lshift(1, 26)
+Gbi.SHADER_OPT_ALPHA = bit.lshift(1, 24)
+Gbi.SHADER_OPT_FOG = bit.lshift(1, 25)
+Gbi.SHADER_OPT_TEXTURE_EDGE = bit.lshift(1, 26)
 
 -- Gbi.G_SETCOMBINE: color combine modes
 -- Color combiner constants:
@@ -478,7 +478,7 @@ function Gbi.gDPSetFogColor(displaylist, r, g, b, a)
 	table.insert(displaylist, {
 		words = {
 			w0 = Gbi.G_SETFOGCOLOR,
-			w1 = {r, g, b, a}
+			w1 = {r=r, g=g, b=b, a=a}
 		}
 	})
 end
@@ -487,7 +487,7 @@ function Gbi.gDPSetEnvColor(displaylist, r, g, b, a)
 	table.insert(displaylist, {
 		words = {
 			w0 = Gbi.G_SETENVCOLOR,
-			w1 = {r, g, b, a}
+			w1 = {r=r, g=g, b=b, a=a}
 		}
 	})
 end
@@ -496,7 +496,7 @@ function Gbi.gDPSetFillColor(displaylist, color)
 	table.insert(displaylist, {
 		words = {
 			w0 = Gbi.G_SETFILLCOLOR,
-			w1 = {color}
+			w1 = {color=color}
 		}
 	})
 end
@@ -505,7 +505,7 @@ function Gbi.gDPFillRectangle(displaylist, ulx, uly, lrx, lry)
 	table.insert(displaylist, {
 		words = {
 			w0 = Gbi.G_FILLRECT,
-			w1 = {ulx, uly, lrx, lry}
+			w1 = {ulx=ulx, uly=uly, lrx=lrx, lry=lry}
 		}
 	})
 end
@@ -514,7 +514,7 @@ function Gbi.gSPTextureRectangle(displaylist, ulx, uly, lrx, lry, tile, uls, ult
 	table.insert(displaylist, {
 		words = {
 			w0 = Gbi.G_TEXRECT,
-			w1 = {ulx, uly, lrx, lry, tile, uls, ult, dsdx, dtdy}
+			w1 = {ulx=ulx, uly=uly, lrx=lrx, lry=lry, tile=tile, uls=uls, ult=ult, dsdx=dsdx, dtdy=dtdy}
 		}
 	})
 end
@@ -523,7 +523,7 @@ function Gbi.gSPTextureRectangleFlip(displaylist, ulx, uly, lrx, lry, tile, uls,
 	table.insert(displaylist, {
 		words = {
 			w0 = Gbi.G_FILLRECTFLIP,
-			w1 = {ulx, uly, lrx, lry, tile, uls, ult, dsdx, dtdy}
+			w1 = {ulx=ulx, uly=uly, lrx=lrx, lry=lry, tile=tile, uls=uls, ult=ult, dsdx=dsdx, dtdy=dtdy}
 		}
 	})
 end
@@ -532,7 +532,7 @@ function Gbi.gSPTexture(displaylist, s, t, level, tile, on)
 	table.insert(displaylist, {
 		words = {
 			w0 = Gbi.G_TEXTURE,
-			w1 = {s, t}
+			w1 = {s=s, t=t}
 		}
 	})
 end
@@ -541,7 +541,7 @@ function Gbi.gDPSetCombineMode(displaylist, mode)
 	table.insert(displaylist, {
 		words = {
 			w0 = Gbi.G_SETCOMBINE,
-			w1 = {mode}
+			w1 = {mode=mode}
 		}
 	})
 end
@@ -550,7 +550,7 @@ function Gbi.gDPSetTileSize(displaylist, t, uls, ult, lrs, lrt)
 	table.insert(displaylist, {
 		words = {
 			w0 = Gbi.G_SETTILESIZE,
-			w1 = {t, uls, ult, lrs, lrt}
+			w1 = {t=t, uls=uls, ult=ult, lrs=lrs, lrt=lrt}
 		}
 	})
 end
@@ -568,7 +568,7 @@ function Gbi.gSPMatrix(displaylist, matrix, parameters)
 	table.insert(displaylist, {
 		words = {
 			w0 = Gbi.G_MTX,
-			w1 = {matrix, parameters}
+			w1 = {matrix=matrix, parameters=parameters}
 		}
 	})
 end
@@ -577,7 +577,7 @@ function Gbi.gDPSetRenderMode(displaylist, mode)
 	table.insert(displaylist, {
 		words = {
 			w0 = Gbi.G_SETOTHERMODE_L,
-			w1 = {mode}
+			w1 = {mode=mode}
 		}
 	})
 end
@@ -585,7 +585,7 @@ function Gbi.gDPSetTextureFilter(displaylist, newmode)
 	table.insert(displaylist, {
 		words = {
 			w0 = Gbi.G_SETOTHERMODE_H,
-			w1 = {category = Gbi.G_MDSFT_TEXTFILT, newmode}
+			w1 = {category = Gbi.G_MDSFT_TEXTFILT, newmode=newmode}
 		}
 	})
 end
@@ -594,7 +594,7 @@ function Gbi.gDPSetCycleType(displaylist, newmode)
 	table.insert(displaylist, {
 		words = {
 			w0 = Gbi.G_SETOTHERMODE_H,
-			w1 = {category = Gbi.G_MDSFT_CYCLETYPE, newmode}
+			w1 = {category = Gbi.G_MDSFT_CYCLETYPE, newmode=newmode}
 		}
 	})
 end
@@ -603,7 +603,7 @@ function Gbi.gSPVertex(displaylist, vertices, num_vertices, dest_index)
 	table.insert(displaylist, {
 		words = {
 			w0 = Gbi.G_VTX,
-			w1 = {vertices, dest_index}
+			w1 = {vertices=vertices, dest_index=dest_index}
 		}
 	})
 end
@@ -612,7 +612,7 @@ function Gbi.gSP1Triangle(displaylist, v0, v1, v2, flag)
 	table.insert(displaylist, {
 		words = {
 			w0 = Gbi.G_TRI1,
-			w1 = {v0, v1, v2, flag}
+			w1 = {v0=v0, v1=v1, v2=v2, flag=flag}
 		}
 	})
 end
@@ -630,7 +630,7 @@ function Gbi.gDPSetPrimColor(displaylist, m, l, r, g, b, a)
 	table.insert(displaylist, {
 		words = {
 			w0 = Gbi.G_SETPRIMCOLOR,
-			w1 = {m, l, r, g, b, a}
+			w1 = {m=m, l=l, r=r, g=g, b=b, a=a}
 		}
 	})
 end
@@ -640,7 +640,7 @@ function Gbi.gSPSetGeometryMode(displaylist, mode)
 	table.insert(displaylist, {
 		words = {
 			w0 = Gbi.G_SETGEOMETRYMODE,
-			w1 = {mode}
+			w1 = {mode=mode}
 		}
 	})
 end
@@ -649,7 +649,7 @@ function Gbi.gSPClearGeometryMode(displaylist, mode)
 	table.insert(displaylist, {
 		words = {
 			w0 = Gbi.G_CLEARGEOMETRYMODE,
-			w1 = {mode}
+			w1 = {mode=mode}
 		}
 	})
 end
@@ -666,7 +666,7 @@ function Gbi.gSPBranchList(displaylist, childDisplayList)
 	table.insert(displaylist, {
 		words = {
 			w0 = Gbi.G_DL,
-			w1 = {childDisplayList, branch = Gbi.G_DL_NOPUSH}
+			w1 = {childDisplayList=childDisplayList, branch = Gbi.G_DL_NOPUSH}
 		}
 	})
 end
@@ -675,7 +675,7 @@ function Gbi.gSPDisplayList(displaylist, childDisplayList)
 	table.insert(displaylist, {
 		words = {
 			w0 = Gbi.G_DL,
-			w1 = {childDisplayList, branch = Gbi.G_DL_PUSH}
+			w1 = {childDisplayList=childDisplayList, branch = Gbi.G_DL_PUSH}
 		}
 	})
 end
@@ -684,7 +684,7 @@ function Gbi.gDPSetTextureImage(displaylist, format, size, width, imageData)
 	table.insert(displaylist, {
 		 words = {
 			w0 = Gbi.G_SETTIMG,
-			w1 = {format, size, width, imageData}
+			w1 = {format=format, size=size, width=width, imageData=imageData}
 		}
 	})
 end
@@ -693,7 +693,7 @@ function Gbi.gDPLoadBlock(displaylist, tile, uls, ult, lrs) -- dxt skipped
 	table.insert(displaylist, {
 		words = {
 			w0 = Gbi.G_LOADBLOCK,
-			w1 = {tile, uls, ult, lrs}
+			w1 = {tile=tile, uls=uls, ult=ult, lrs=lrs}
 		}
 	})
 end
@@ -721,7 +721,7 @@ function Gbi.gsSPDisplayList(childDisplayList)
 	return {
 		words = {
 			w0 = Gbi.G_DL,
-			w1 = {childDisplayList, branch = Gbi.G_DL_PUSH}
+			w1 = {childDisplayList=childDisplayList, branch = Gbi.G_DL_PUSH}
 		}
 	}
 end
@@ -747,7 +747,7 @@ function Gbi.gsDPSetRenderMode(mode)
 	return {
 		words = {
 			w0 = Gbi.G_SETOTHERMODE_L,
-			w1 = {mode}
+			w1 = {mode=mode}
 		}
 	}
 end
@@ -756,7 +756,7 @@ function Gbi.gsDPSetTextureFilter(newmode)
 	return {
 		words = {
 			w0 = Gbi.G_SETOTHERMODE_H,
-			w1 = {category = Gbi.G_MDSFT_TEXTFILT, newmode}
+			w1 = {category = Gbi.G_MDSFT_TEXTFILT, newmode=newmode}
 		}
 	}
 end
@@ -765,7 +765,7 @@ function Gbi.gsDPSetCycleType(newmode)
 	return {
 		words = {
 			w0 = Gbi.G_SETOTHERMODE_H,
-			w1 = {category = Gbi.G_MDSFT_CYCLETYPE, newmode}
+			w1 = {category = Gbi.G_MDSFT_CYCLETYPE, newmode=newmode}
 		}
 	}
 end
@@ -823,7 +823,7 @@ function Gbi.gsSPClearGeometryMode(mode)
 	return {
 		words = {
 			w0 = Gbi.G_CLEARGEOMETRYMODE,
-			w1 = {mode}
+			w1 = {mode=mode}
 		}
 	}
 end
@@ -832,7 +832,7 @@ function Gbi.gsSPSetGeometryMode(mode)
 	return {
 		words = {
 			w0 = Gbi.G_SETGEOMETRYMODE,
-			w1 = {mode}
+			w1 = {mode=mode}
 		}
 	}
 end
@@ -841,7 +841,7 @@ function Gbi.gsDPSetCombineMode(mode)
 	return {
 		words = {
 			w0 = Gbi.G_SETCOMBINE,
-			w1 = {mode}
+			w1 = {mode=mode}
 		}
 	}
 end
@@ -850,7 +850,7 @@ function Gbi.gsSPMatrix(matrix, parameters)
 	return {
 		words = {
 			w0 = Gbi.G_MTX,
-			w1 = {matrix, parameters}
+			w1 = {matrix=matrix, parameters=parameters}
 		}
 	}
 end
@@ -859,7 +859,7 @@ function Gbi.gsDPSetFogColor(r, g, b, a)
 	return {
 		words = {
 			w0 = Gbi.G_SETFOGCOLOR,
-			w1 = {r, g, b, a}
+			w1 = {r=r, g=g, b=b, a=a}
 		}
 	}
 end
@@ -868,7 +868,7 @@ function Gbi.gsDPSetEnvColor(r, g, b, a)
 	return {
 		words = {
 			w0 = Gbi.G_SETENVCOLOR,
-			w1 = {r, g, b, a}
+			w1 = {r=r, g=g, b=b, a=a}
 		}
 	}
 end
@@ -877,7 +877,7 @@ function Gbi.gsDPSetPrimColor(m, l, r, g, b, a)
 	return {
 		words = {
 			w0 = Gbi.G_SETPRIMCOLOR,
-			w1 = {m, l, r, g, b, a}
+			w1 = {m=m, l=l, r=r, g=g, b=b, a=a}
 		}
 	}
 end
@@ -886,7 +886,7 @@ function Gbi.gsDPSetTile(fmt, siz, line, tmem, tile, palette, cmt, maskt, shiftt
 	return {
 		words = {
 			w0 = Gbi.G_SETTILE,
-			w1 = {fmt, siz, line, tmem, tile, palette, cmt, cms}
+			w1 = {fmt=fmt, siz=siz, line=line, tmem=tmem, tile=tile, palette=palette, cmt=cmt, cms=cms}
 		}
 	}
 end
@@ -895,7 +895,7 @@ function Gbi.gsSPTexture(s, t, level, tile, on)
 	return {
 		words = {
 			w0 = Gbi.G_TEXTURE,
-			w1 = {s, t}
+			w1 = {s=s, t=t}
 		}
 	}
 end
@@ -904,7 +904,7 @@ function Gbi.gsDPSetTileSize(t, uls, ult, lrs, lrt)
 	return {
 		words = {
 			w0 = Gbi.G_SETTILESIZE,
-			w1 = {t, uls, ult, lrs, lrt}
+			w1 = {t=t, uls=uls, ult=ult, lrs=lrs, lrt=lrt}
 		}
 	}
 end
@@ -913,7 +913,7 @@ function Gbi.gsDPSetTextureImage(format, size, width, imageData)
 	return {
 		words = {
 			w0 = Gbi.G_SETTIMG,
-			w1 = {format, size, width, imageData}
+			w1 = {format=format, size=size, width=width, imageData=imageData}
 		}
 	}
 end
@@ -922,7 +922,7 @@ function Gbi.gsDPLoadBlock(tile, uls, ult, lrs) -- dxt skipped
 	return {
 		words = {
 			w0 = Gbi.G_LOADBLOCK,
-			w1 = {tile, uls, ult, lrs}
+			w1 = {tile=tile, uls=uls, ult=ult, lrs=lrs}
 		}
 	}
 end
@@ -931,7 +931,7 @@ function Gbi.gsSPVertex(vertices, num_vertices, dest_index)
 	return {
 		words = {
 			w0 = Gbi.G_VTX,
-			w1 = {vertices, dest_index}
+			w1 = {vertices=vertices, dest_index=dest_index}
 		}
 	}
 end
@@ -940,7 +940,7 @@ function Gbi.gsSP1Triangle(v0, v1, v2, flag)
 	return {
 		words = {
 			w0 = Gbi.G_TRI1,
-			w1 = {v0, v1, v2, flag}
+			w1 = {v0=v0, v1=v1, v2=v2, flag=flag}
 		}
 	}
 end
