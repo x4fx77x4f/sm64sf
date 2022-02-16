@@ -27,7 +27,7 @@ function PAINTING_ID(id, grp)
 end
 
 local function copy3argsToObject(pos, argIndex, args)
-	for i = argIndex, i < argIndex + 3 do
+	for i = argIndex, argIndex + 3 do
 		table.insert(pos, args[i])
 	end
 	return 3
@@ -76,8 +76,6 @@ function GeoLayout:pop(args)
 end
 
 function GeoLayout:node_screen_area(args) -- node_root
-	do return self:next() end -- TODO: unstub all of GeoLayout
-	
 	local _, x, y, width, height = unpack(args)
 	local i = 0
 	
@@ -87,12 +85,12 @@ function GeoLayout:node_screen_area(args) -- node_root
 	
 	--self.gGeoViews = {}
 	
-	grapgNode.numViews = self.gGeoNumViews
+	graphNode.numViews = self.gGeoNumViews
 	
 	self.gGeoViews = Array(self.gGeoNumViews):fill(false):destroy() -- TODO: is this necessary?
 	graphNode.views = self.gGeoViews
 	
-	GraphNode:register_scene_graph_Node(self, graphNode)
+	GraphNode:register_scene_graph_node(self, graphNode)
 	
 	self:next()
 end
@@ -204,13 +202,13 @@ function GeoLayout:node_generated(args)
 end
 
 function GeoLayout:node_background(args)
-	local graphNode = GraphNode:init_graph_node_background(nil, nil, args[1], arg[2], 0)
+	local graphNode = GraphNode:init_graph_node_background(nil, nil, args[1], args[2], 0)
 	GraphNode:register_scene_graph_node(self, graphNode)
 	self:next()
 end
 
 function GeoLayout:node_switch_case(args)
-	local graphNode = GraphNode:init_graph_node_switch_case(args[1], nil, args[2], arg[3])
+	local graphNode = GraphNode:init_graph_node_switch_case(args[1], nil, args[2], args[3])
 	GraphNode:register_scene_graph_node(self, graphNode)
 	self:next()
 end
@@ -222,7 +220,7 @@ function GeoLayout:node_culling_radius(args)
 end
 
 function GeoLayout:node_render_range(args)
-	local graphNode = GraphNode:init_graph_Node_render_range(args[1], arg[2])
+	local graphNode = GraphNode:init_graph_Node_render_range(args[1], args[2])
 	GraphNode:register_scene_graph_node(self, graphNode)
 	self:next()
 end
@@ -360,7 +358,7 @@ end
 function GeoLayout:process_geo_layout(geoLayout)
 	self:start_new_layout(geoLayout)
 	
-	-- set a bunch of other initial globals
+	-- set a bunch of other initial fields
 	self.gCurRootGraphNode = nil
 	self.gGeoNumViews = 0
 	
@@ -372,21 +370,23 @@ function GeoLayout:process_geo_layout(geoLayout)
 	
 	self.gGeoLayoutStack = {0, 0}
 	
-	--print("processing geo layout")
-	
+	dbgprintf("[GeoLayout:process_geo_layout] Processing geo layout...\n")
 	while self.sCurrentLayout.index < #self.sCurrentLayout.layout+(self.sCurrentLayout.layout[0] and 1 or 0) do
 		local cmd = self.sCurrentLayout.layout[self.sCurrentLayout.index]
 		if not cmd then
-			errorf("geo layout out of bounds at %d in %q", self.sCurrentLayout.index, _GR[self.sCurrentLayout.commands])
+			errorf("geo layout out of bounds at %d in %q", self.sCurrentLayout.index, _GR[self.sCurrentLayout.commands] or "<UNKNOWN>")
 		elseif cmd[0] then
+			dbgprintf("[GeoLayout:process_geo_layout] Running command %q at %d.\n", cmd[0], self.sCurrentLayout.index)
 			self[cmd[0]](self, unpack(cmd))
 		else
+			dbgprintf("[GeoLayout:process_geo_layout] Running command %q at %d.\n", _GR[cmd.command] or "<UNKNOWN>", self.sCurrentLayout.index)
 			cmd.command(self, cmd.args)
 		end
 	end
+	if dbgprintf("[GeoLayout:process_geo_layout] Finished processing geo layout.\n") then
+		--printTable(self.gCurRootGraphNode)
+	end
 	
-	--print("finished processing geo layout")
-	--printTable(self.gCurRootGraphNode)
 	return self.gCurRootGraphNode
 end
 
@@ -394,7 +394,9 @@ local function wrap(dst, src)
 	src = src or GeoLayout['node_'..string.lower(dst)]
 	assertf(src, "failed to wrap %q for GeoLayout", dst)
 	dst = 'GEO_'..dst
-	_GR[src] = dst
+	if VERBOSE then
+		_GR[src] = dst
+	end
 	_G[dst] = function(...)
 		return {command=src, args={...}}
 	end

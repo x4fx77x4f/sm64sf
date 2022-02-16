@@ -21,11 +21,18 @@ function boobytrap(...)
 		return error(msg)
 	end
 end
-function dbgprintf(...)
+function osdprintf(...)
 	dbgStr = dbgStr..sprintf(...).."\n"
 end
-function dbgprintf2(...)
+function osdprintf2(...)
 	dbgStr = sprintf(...).."\n"..dbgStr
+end
+VERBOSE = true
+function dbgprintf(...)
+	if VERBOSE then
+		printf(...)
+		return true
+	end
 end
 
 -- DEPRECATED; USE asset_loader.lua INSTEAD!
@@ -177,6 +184,13 @@ local thread = coroutine.create(function()
 		--@include sm64sf/src/buffers/buffers.lua
 		require('sm64sf/src/buffers/buffers.lua')
 		
+		--@include sm64sf/src/levels/course_defines.lua
+		require('sm64sf/src/levels/course_defines.lua')
+		--@include sm64sf/src/levels/level_defines_constants.lua
+		require('sm64sf/src/levels/level_defines_constants.lua')
+		
+		--@include sm64sf/src/game/camera.lua
+		require('sm64sf/src/game/camera.lua')
 		--@include sm64sf/src/engine/graph_node.lua
 		require('sm64sf/src/engine/graph_node.lua')
 		--@include sm64sf/src/engine/geo_layout.lua

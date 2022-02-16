@@ -99,6 +99,7 @@ local function get_func(func, funcClass)
 	-- allow deferred linking:
 	-- GEO_ASM(0, 'MarioMisc.geo_mario_head_rotation')
 	if type(func) == 'string' then
+		dbgprintf("[GraphNode.get_func] func was: %q\n", func)
 		local f
 		local parts = string.split(func, '.')
 		if #parts == 1 then
@@ -111,6 +112,7 @@ local function get_func(func, funcClass)
 		assertf(f, "deferred graph node func not found: %s", func)
 		func = f
 	end
+	dbgprintf("[GraphNode.get_func] func: %q, funcClass: %q\n", func == nil and "<NIL>" or _GR[func] or "<UNKNOWN>", funcClass == nil and "<NIL>" or _GR[funcClass] or "<UNKNOWN>")
 	
 	return func, funcClass
 end
@@ -180,18 +182,117 @@ function GraphNode:init_scene_graph_node_links(graphNode, type)
 end
 
 --function GraphNode:init_graph_node_start(pool, graphNode) end
---function GraphNode:init_graph_node_root(pool, graphNode, areaIndex, x, y, width, height) end
+
+function GraphNode:init_graph_node_root(pool, graphNode, areaIndex, x, y, width, height)
+	graphNode = {
+		node = -1,
+		areaIndex = areaIndex,
+		x = x,
+		y = y,
+		width = width,
+		height = height,
+		unk15 = 0,
+		views = null,
+		numViews = 0
+	}
+	self:init_scene_graph_node_links(graphNode, GRAPH_NODE_TYPE_ROOT)
+	return graphNode
+end
+
 --function GraphNode:init_graph_node_culling_radius(radius) end
 --function GraphNode:init_graph_node_render_range(minDistance, maxDistance) end
 --function GraphNode:init_graph_node_switch_case(numCases, selectedCase, func, funcClass) end
---function GraphNode:init_graph_node_perspective(pool, graphNode, fov, near, far, func) end
---function GraphNode:init_graph_node_generated(pool, graphNode, gfxFunc, parameter, funcClass) end
+
+function GraphNode:init_graph_node_perspective(pool, graphNode, fov, near, far, func)
+	local funcClass
+	func, funcClass = get_func(func, CameraInstance)
+	graphNode = {
+		node = -1,
+		fov = fov,
+		near = near,
+		far = far,
+		func = {
+			func = func,
+			funcClass = funcClass
+		}
+	}
+	self:init_scene_graph_node_links(graphNode, GRAPH_NODE_TYPE_PERSPECTIVE)
+	if func then
+		assertf(func == CameraInstance.geo_camera_fov, "check to make sure the function is a part of the Camera class")
+		func(funcClass, GEO_CONTEXT_CREATE, graphNode)
+	end
+	return graphNode
+end
+
+function GraphNode:init_graph_node_generated(pool, graphNode, gfxFunc, parameter, funcClass)
+	gfxFunc, funcClass = get_func(gfxFunc, funcClass)
+	graphNode = {
+		node = -1,
+		parameter = parameter,
+		func = {
+			func = gfxFunc,
+			funcClass = funcClass
+		}
+	}
+	self:init_scene_graph_node_links(graphNode, GRAPH_NODE_TYPE_GENERATED_LIST)
+	if gfxFunc and gfxFunc ~= 0 then
+		gfxFunc(funcClass, GEO_CONTEXT_CREATE, graphNode)
+	end
+	return graphNode
+end
+
 --function GraphNode:init_graph_node_object_parent(sharedChild) end
 --function GraphNode:init_graph_node_animated_part(drawingLayer, displayList, translation) end
 --function GraphNode:init_graph_node_billboard(drawingLayer, displayList, translation) end
---function GraphNode:init_graph_node_camera(pool, graphNode, pos, focus, func, mode) end
+
+function GraphNode:init_graph_node_camera(pool, graphNode, pos, focus, func, mode)
+	local funcClass
+	func, funcClass = get_func(func, CameraInstance)
+	graphNode = {
+		node = -1,
+		roll = 0,
+		rollScreen = 0,
+		config = {
+			mode = 0,
+			camera = nil
+		},
+		pos = pos,
+		focus = focus,
+		func = {
+			func = func,
+			funcClass = funcClass
+		}
+	}
+	
+	self:init_scene_graph_node_links(graphNode, GRAPH_NODE_TYPE_CAMERA)
+	
+	if func and func ~= 0 then
+		assertf(func == CameraInstance.geo_camera_main, "check to make sure the function is a part of the Camera class")
+		func(funcClass, GEO_CONTEXT_CREATE, graphNode)
+	end
+	
+	return graphNode
+end
+
 --function GraphNode:init_graph_node_display_list(drawingLayer, displayList) end
---function GraphNode:init_graph_node_background(pool, graphNode, background, backgroundFunc, zero) end
+
+function GraphNode:init_graph_node_background(pool, graphNode, background, backgroundFunc, zero)
+	graphNode = {
+		node = -1,
+		background = background,
+		backgroundFunc = backgroundFunc,
+		zero
+	}
+	
+	self:init_scene_graph_node_links(graphNode, GRAPH_NODE_TYPE_BACKGROUND)
+	
+	if backgroundFunc then
+		backgroundFunc(GEO_CONTEXT_CREATE, graphNode)
+	end
+	
+	return graphNode
+end
+
 --function GraphNode:init_graph_node_shadow(shadowScale, shadowSolidity, shadowType) end
 --function GraphNode:init_graph_node_scale(drawingLayer, displayList, scale) end
 --function GraphNode:init_graph_node_rotation(drawingLayer, displayList, rotation) end
@@ -204,7 +305,7 @@ function GraphNode:init_graph_node_ortho(pool, graphNode, scale)
 		scale = scale
 	}
 	
-	self_init_scene_graph_node_links(graphNode, GRAPH_NODE_TYPE_ORTHO_PROJECTION)
+	self:init_scene_graph_node_links(graphNode, GRAPH_NODE_TYPE_ORTHO_PROJECTION)
 	return graphNode
 end
 
@@ -223,6 +324,7 @@ function GraphNode:init_graph_node_master_list(pool, graphNode, on)
 end
 
 function GraphNode:register_scene_graph_node(g, graphNode)
+	dbgprintf("[GraphNode:register_scene_graph_node] g: %q, graphNode: %q, g.gCurGraphNodeIndex: %d, g.gCurRootGraphNode: %q\n", tostring(g), tostring(graphNode), g.gCurGraphNodeIndex, tostring(g.gCurRootGraphNode))
 	if graphNode then
 		g.gCurGraphNodeList[g.gCurGraphNodeIndex] = graphNode
 		
@@ -231,11 +333,13 @@ function GraphNode:register_scene_graph_node(g, graphNode)
 				g.gCurRootGraphNode = graphNode
 			end
 		else
-			printTable(g.gCurGraphNodeList)
-			if g.gCurGraphNodeList[g.gCurGraphNodeIndex - 1].type == GRAPH_NODE_TYPE_OBJECT_PARENT then
-				g.gCurGraphNodeList[g.gCurGraphNodeIndex - 1].sharedChild = graphNode
+			local node = g.gCurGraphNodeList[g.gCurGraphNodeIndex - 1]
+			if type(node) ~= 'table' then
+				printf("[GraphNode:register_scene_graph_node] WARNING: Invalid node at %d-1; ignoring.\n", g.gCurGraphNodeIndex)
+			elseif node.type == GRAPH_NODE_TYPE_OBJECT_PARENT then
+				node.sharedChild = graphNode
 			else
-				self:geo_add_child(g.gCurGraphNodeList[g.gCurGraphNodeIndex - 1], graphNode)
+				self:geo_add_child(node, graphNode)
 			end
 		end
 	end

@@ -55,12 +55,12 @@ local function on_anim_frame()
 	waitUntil = now+frameTime
 	framesThisSecond = framesThisSecond+1
 	
-	dbgprintf("fps: %d", fps)
-	dbgprintf("quota: %d%%", math.ceil(quotaAverage()/quotaMax()*100))
+	osdprintf("fps: %d", fps)
+	osdprintf("quota: %d%%", math.ceil(quotaAverage()/quotaMax()*100))
 	
 	local lvlcmd = LevelCommands.sCurrentScript
 	
-	dbgprintf(
+	osdprintf(
 		"LvlCmds: %s is %s at #%d doing %s",
 		_GR[lvlcmd.commands] or "[???]",
 		_GR2[LevelCommands.sScriptStatus] or "[???]",
