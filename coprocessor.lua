@@ -41,7 +41,7 @@ function GFX:sp_reset()
 end
 
 function GFX:matrix_mul(res, a, b)
-	local temp = Mat4()
+	local temp = Mat4(true)
 	for i=0, 3 do
 		for j=0, 3 do
 			temp[i][j] =
@@ -115,7 +115,7 @@ function GFX:scale_4_8(val)
 end
 
 function GFX:dp_set_fill_color(color)
-	self.rdp.fill_color.r = self:scale_5_8(bit.rshift(color, 11))
+	self.rdp.fill_color.r = self:scale_5_8(bit.band(bit.rshift(color, 11), 0x1f))
 	self.rdp.fill_color.g = self:scale_5_8(bit.band(bit.rshift(color, 6), 0x1f))
 	self.rdp.fill_color.b = self:scale_5_8(bit.band(bit.rshift(color, 1), 0x1f))
 	self.rdp.fill_color.a = bit.band(color, 1) * 255
@@ -149,7 +149,9 @@ end
 
 function GFX:lookup_or_create_shader_program(shader_id)
 	-- TODO: unstub lookup_or_create_shader_program
-	return shader_id
+	return {
+		num_inputs = -1
+	}
 end
 
 function GFX:generate_cc(cc_id)
@@ -206,8 +208,8 @@ function GFX:generate_cc(cc_id)
 	end
 	
 	return {
-		cc_id,
-		shader_input_mapping,
+		cc_id = cc_id,
+		shader_input_mapping = shader_input_mapping,
 		prg = self:lookup_or_create_shader_program(shader_id)
 	}
 end
@@ -265,8 +267,279 @@ function GFX:sp_movemem(t, data, index)
 	end
 end
 
---function GFX:sp_tri1(vtx1_idx, vtx2_idx, vtx3_idx) end
---function GFX:draw_rectangle(ulx, uly, lrx, lry)
+function GFX:sp_tri1(vtx1_idx, vtx2_idx, vtx3_idx)
+	local v1 = self.rsp.loaded_vertices[vtx1_idx]
+	local v2 = self.rsp.loaded_vertices[vtx2_idx]
+	local v3 = self.rsp.loaded_vertices[vtx3_idx]
+	local v_arr = {v1, v2, v3}
+	
+	if bit.band(v1.clip_rej, v2.clip_rej, v3.clip_rej) ~= 0 then
+		return
+	end
+	
+	if bit.band(self.rsp.geometry_mode, Gbi.G_CULL_BOTH) ~= 0 then
+		local dx1 = v1.x / (v1.w) - v2.x / (v2.w)
+		local dy1 = v1.y / (v1.w) - v2.y / (v2.w)
+		local dx2 = v3.x / (v3.w) - v2.x / (v2.w)
+		local dy2 = v3.y / (v3.w) - v2.y / (v2.w)
+		local cross = (dx1 * dy2) - (dy1 * dx2)
+		
+		if (v1.w < 0) ^ (v2.w < 0) ^ (v3.w < 0) ~= 0 then
+			-- If one vertex lies behind the eye, negating cross will give the correct result.
+			-- If all vertices lie behind the eye, the triangle will be rejected anyway.
+			cross = -cross
+		end
+		
+		local case = bit.band(self.rsp.geometry_mode, Gbi.G_CULL_BOTH)
+		if
+			(case == Gbi.G_CULL_FRONT and cross <= 0) or
+			(case == Gbi.G_CULL_BACK and cross >= 0) or
+			case == Gbi.G_CULL_BOTH
+		then
+			return
+		end
+	end
+	
+	local depth_test = bit.band(self.rsp.geometry_mode, Gbi.G_ZBUFFER) == Gbi.G_ZBUFFER
+	if depth_test ~= self.rendering_state.depth_test then
+		self:flush()
+		render.enableDepth(depth_test)
+		self.rendering_state.depth_test = depth_test
+	end
+	
+	local z_upd = bit.band(self.rdp.other_mode_l, Gbi.Z_UPD) == Gbi.Z_UPD
+	if z_upd ~= self.rendering_state.depth_mask then
+		self:flush()
+		--WebGL.set_depth_mask(z_upd)
+		self.rendering_state.depth_mask = z_upd
+	end
+	
+	local zmode_decal = bit.band(self.rdp.other_mode_l, Gbi.ZMODE_DEC) == Gbi.ZMODE_DEC
+	if zmode_decal ~= self.rendering_state.decal_mode then
+		self:flush()
+		--WebGL.set_zmode_decal(zmode_decal)
+		self.rendering_state.decal_mode = zmode_decal
+	end
+	
+	if self.rdp.viewport_or_scissor_changed then
+		if not self:viewportsEqual(self.rdp.viewport, self.rendering_state.viewport) then
+			self:flush()
+			--WebGL.set_viewport(self.rdp.viewport)
+			self.rendering_state.viewport = table.copy(self.rdp.viewport)
+		end
+		if not self:viewportsEqual(self.rdp.scissor, self.rendering_state.scissor) then
+			self:flush()
+			--WebGL.set_scissor(self.rdp.scissor)
+			self.rendering_state.scissor = table.copy(self.rdp.scissor)
+		end
+		self.rdp.viewport_or_scissor_changed = false
+	end
+	
+	local cc_id = self.rdp.combine_mode
+	
+	local use_alpha = bit.band(self.rdp.other_mode_l, bit.lshift(Gbi.G_BL_A_MEM, 18)) == 0
+	local use_fog = bit.rshift(self.rdp.other_mode_l, 30) == Gbi.G_BL_CLR_FOG -- TODO: this uses '>>>' instead of '>>'. make sure this didn't break
+	local texture_edge = bit.band(self.rdp.other_mode_l, Gbi.CVG_X_ALPHA) == Gbi.CVG_X_ALPHA
+	
+	if texture_edge then
+		use_alpha = true
+	end
+	
+	if use_alpha then
+		cc_id = bit.bor(cc_id, Gbi.SHADER_OPT_ALPHA)
+	end
+	if use_fog then
+		cc_id = bit.bor(cc_id, Gbi.SHADER_OPT_FOG)
+	end
+	if texture_edge then
+		cc_id = bit.bor(cc_id, Gbi.SHADER_OPT_TEXTURE_EDGE)
+	end
+	
+	if not use_alpha then
+		cc_id = bit.band(cc_id, bit.bnot(0xfff000))
+	end
+	
+	local comb = self:lookup_or_create_color_combiner(cc_id)
+	local prg = comb.prg
+	
+	if prg ~= self.rendering_state.shader_program then
+		self:flush()
+		--WebGL.unload_shader(self.rendering_state.shader_program)
+		--WebGL.load_shader(prg)
+		self.rendering_state.shader_program = prg
+	end
+	
+	if use_alpha ~= self.rendering_state.alpha_blend then
+		self:flush()
+		--WebGL.set_use_alpha(use_alpha)
+		self.rendering_state.alpha_blend = use_alpha
+	end
+	
+	local used_textures = {false, false}
+	--local num_inputs = WebGL.shader_get_info(prg, used_textures)
+	local num_inputs = prg.num_inputs
+	
+	for i=1, 2 do
+		if used_textures[i] then
+			if self.rdp.textures_changed[i] then
+				self:flush()
+				self:import_texture(i)
+				self.rdp.textures_changed[i] = false
+			end
+			local linear_filter = self.rdp.other_mode_h[Gbi.G_MDSFT_TEXTFILT] ~= 0
+			if
+				linear_filter ~= self.rendering_state.textures[i].linear_filter or
+				self.rdp.texture_tile.cms ~= self.rendering_state.textures[i].cms or
+				self.rdp.texture_tile.cmt ~= self.rendering_state.textures[i].cmt
+			then
+				self:flush()
+				--WebGL.set_sampler_parameters(i, linear_filter, self.rdp.texture_tile.cms, self.rdp.texture_tile.cmt)
+				self.rendering_state.textures[i].linear_filter = linear_filter
+				self.rendering_state.textures[i].cms = self.rdp.texture_tile.cms
+				self.rendering_state.textures[i].cmt = self.rdp.texture_tile.cmt
+			end
+		end
+	end
+	
+	local use_texture = used_textures[0] or used_textures[1]
+	local tex_width = (self.rdp.texture_tile.lrs - self.rdp.texture_tile.uls + 4) / 4
+	local tex_height = (self.rdp.texture_tile.lrt - self.rdp.texture_tile.ult + 4) / 4
+	
+	for i=1, 3 do
+		table.insert(self.buf_vbo, v_arr[i].x)
+		table.insert(self.buf_vbo, v_arr[i].y)
+		table.insert(self.buf_vbo, v_arr[i].z)
+		table.insert(self.buf_vbo, v_arr[i].w)
+		
+		if use_texture then
+			local u = (v_arr[i].u - self.rdp.texture_tile.uls * 8) / 32.0
+			local v = (v_arr[i].v - self.rdp.texture_tile.ult * 8) / 32.0
+			if self.rdp.other_mode_h[Gbi.G_MDSFT_TEXTFILT] ~= Gbi.G_TF_POINT then
+				-- Linear filter adds 0.5f to the coordinates
+				u = u+0.5
+				v = v+0.5
+			end
+			
+			table.insert(self.buf_vbo, u / tex_width)
+			table.insert(self.buf_vbo, v / tex_height)
+		end
+		
+		if use_fog then
+			table.insert(self.buf_vbo, self.rdp.fog_color.r / 255.0)
+			table.insert(self.buf_vbo, self.rdp.fog_color.g / 255.0)
+			table.insert(self.buf_vbo, self.rdp.fog_color.b / 255.0)
+			table.insert(self.buf_vbo, v_arr[i].color.a / 255.0)
+		end
+		
+		for j=0, num_inputs do
+			local color = {}
+			for k=0, 1 + (use_alpha and 1 or 0) do
+				local case = comb.shader_input_mapping[k][j]
+				if case == Gbi.CC_PRIM then
+					color = self.rdp.prim_color
+				elseif case == Gbi.CC_SHADE then
+					color = v_arr[i].color
+				elseif case == Gbi.CC_ENV then
+					color = self.rdp.env_color
+				elseif case == Gbi.CC_LOD then
+					local distance_frac = (v1.w - 3000.0) / 3000.0
+					if distance_frac < 0.0 then
+						distance_frac = 0.0
+					elseif distance_frac > 1.0 then
+						distance_frac = 1.0
+					end
+					local c = distance_frac * 255.0
+					color.r = c
+					color.g = c
+					color.b = c
+					color.a = c
+				else
+					color = { r = 0, g = 0, b = 0, a = 0 }
+				end
+				if k == 1 then -- not the alpha channel?
+					table.insert(self.buf_vbo, color.r / 255.0)
+					table.insert(self.buf_vbo, color.g / 255.0)
+					table.insert(self.buf_vbo, color.b / 255.0)
+				else -- here is use_alpha is true
+					if use_fog and color == v_arr[i].color then
+						-- Shade alpha is 100% for fog
+						table.insert(self.buf_vbo, 1.0)
+					else
+						table.insert(self.buf_vbo, color.a / 255.0)
+					end
+				end
+			end
+		end
+	end
+	
+	self.buf_vbo_num_tris = self.buf_vbo_num_tris+1
+	if self.buf_vbo_num_tris == MAX_BUFFERED then
+		self:flush()
+	end
+end
+
+function GFX:draw_rectangle(ulx, uly, lrx, lry)
+	local saved_other_mode_h = table.copy(self.rdp.other_mode_h) -- TODO: is a copy really needed here?
+	local cycle_type = self.rdp.other_mode_h[Gbi.G_MDSFT_CYCLETYPE]
+	
+	if cycle_type == Gbi.G_CYC_COPY then
+		self.rdp.other_mode_h[Gbi.G_MDSFT_TEXTFILT] = Gbi.G_TF_POINT
+	end
+	
+	ulx = (ulx / (SCREEN_WIDTH / 2.0)) - 1.0
+	uly = -(uly / (SCREEN_HEIGHT / 2.0)) + 1.0
+	lrx = (lrx / (SCREEN_WIDTH / 2.0)) - 1.0
+	lry = -(lry / (SCREEN_HEIGHT / 2.0)) + 1.0
+	
+	local ul = self.rsp.loaded_vertices[MAX_VERTICES  ]
+	local ll = self.rsp.loaded_vertices[MAX_VERTICES+1]
+	local lr = self.rsp.loaded_vertices[MAX_VERTICES+2]
+	local ur = self.rsp.loaded_vertices[MAX_VERTICES+3]
+	
+	ul.x = ulx
+	ul.y = uly
+	ul.z = -1.0
+	ul.w = 1.0
+	
+	ll.x = ulx
+	ll.y = lry
+	ll.z = -1.0
+	ll.w = 1.0
+	
+	lr.x = lrx
+	lr.y = lry
+	lr.z = -1.0
+	lr.w = 1.0
+	
+	ur.x = lrx
+	ur.y = uly
+	ur.z = -1.0
+	ur.w = 1.0
+	
+	local default_viewport = {
+		x = 0,
+		y = 0,
+		width = SCREEN_WIDTH,
+		height = SCREEN_HEIGHT
+	}
+	local viewport_saved = self.rdp.viewport
+	local geometry_mode_saved = self.rsp.geometry_mode
+	
+	self.rdp.viewport = default_viewport
+	self.rdp.viewport_or_scissor_changed = true
+	self.rsp.geometry_mode = 0
+	
+	self:sp_tri1(MAX_VERTICES  , MAX_VERTICES+1, MAX_VERTICES+3)
+	self:sp_tri1(MAX_VERTICES+1, MAX_VERTICES+2, MAX_VERTICES+3)
+	
+	self.rsp.geometry_mode = geometry_mode_saved
+	self.rdp.viewport = viewport_saved
+	self.rdp.viewport_or_scissor_changed = true
+	
+	if cycle_type == Gbi.G_CYC_COPY then
+		self.rdp.other_mode_h = saved_other_mode_h
+	end
+end
 
 function GFX:dp_set_env_color(r, g, b, a)
 	self.rdp.env_color = {r, g, b, a}
@@ -276,7 +549,30 @@ function GFX:dp_set_prim_color(r, g, b, a)
 	self.rdp.prim_color = {r, g, b, a}
 end
 
---function GFX:dp_fill_rectangle(ulx, uly, lrx, lry) end
+function GFX:dp_fill_rectangle(ulx, uly, lrx, lry)
+	--if self.rdp.color_image_address == self.rdp.z_buf_address then
+	--	return
+	--end
+	
+	local mode = self.rdp.other_mode_h[Gbi.G_MDSFT_CYCLETYPE]
+	
+	if mode == Gbi.G_CYC_COPY or mode == Gbi.G_CYC_FILL then
+		-- Per documentation one extra pixel is added in this modes to each edge
+		lrx = lrx+1
+		lry = lry+1
+	end
+	
+	for i=MAX_VERTICES, MAX_VERTICES+4 do
+		local v = self.rsp.loaded_vertices[i]
+		v.color = self.rdp.fill_color
+	end
+	
+	local saved_combine_mode = self.rdp.combine_mode
+	self:dp_set_combine_mode(self:color_comb(0, 0, 0, Gbi.G_CCMUX_SHADE), self:color_comb(0, 0, 0, Gbi.G_CCMUX_SHADE))
+	self:draw_rectangle(ulx, uly, lrx, lry)
+	self.rdp.combine_mode = saved_combine_mode
+end
+
 --function GFX:dp_texture_rectangle(ulx, uly, lrx, lry, tile, uls, ult, dsdx, dtdy, flip) end
 
 function GFX:sp_texture(s, t)
@@ -396,13 +692,23 @@ GFX.opcodes = {
 	end,
 }
 
+local function callback(err, st)
+	err = type(err) == 'table' and err.message or err -- Fuck off, Starfall
+	pcall(printMessage, 2,
+		"-----BEGIN ERROR OUTPUT BLOCK-----\n"..
+		--err.."\n"..
+		st.."\n"..
+		"-----END ERROR OUTPUT BLOCK-----\n"
+	)
+	return err
+end
 function GFX:run_dl(commands)
 	for i=1, #commands do
 		local command = commands[i]
 		local opcode = command.words.w0
 		local args = command.words.w1
 		local func = self.opcodes[opcode]
-		local success, err = pcall(func, self, args)
+		local success, err = xpcall(func, callback, self, args)
 		if not success then
 			printTable(command)
 			error(err)
@@ -410,8 +716,9 @@ function GFX:run_dl(commands)
 	end
 end
 
-function GFX.generate()
-	mesh.writePosition()
+function GFX:generate()
+	self = self or GFX
+	--mesh.writePosition()
 end
 
 function GFX:flush()
@@ -430,6 +737,7 @@ function GFX:run(commands)
 	render.clear(Color(31, 0, 31, 255), true) -- temporarily magenta so i can see if it's working
 	self:run_dl(commands)
 	self:flush()
+	render.enableDepth(false)
 	render.selectRenderTarget('final')
 	render.setRenderTargetTexture('screen')
 	render.drawTexturedRect(0, 0, 1024, 1024)

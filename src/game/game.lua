@@ -5,26 +5,39 @@ function Game:attachInterfaceToGfxProcessor(func)
 end
 
 function Game:main_loop_init()
+	--setup_game_memory()
+	--init_controllers()
+	--save_file_load_all()
+	
 	-- point levelCommandAddr to the entry point into the level script data.
 	LevelCommands:start_new_script(level_script_entry)
+	
+	--play_music(SEQ_PLAYER_SFX, SEQUENCE_ARGS(0, SEQ_SOUND_PLAYER), 0)
+	--set_sound_mode(save_file_get_sound_mode())
+	--rendering_init()
 end
 
 function Game:main_loop_one_iteration()
-	-- Read data from controllers
-	
-	-- Audio game loop tick
-	
+	--audio_game_loop_tick()
 	self:config_gfx_pool()
-	
-	-- processor controller inputs
-	
+	--read_controller_inputs()
 	LevelCommands:level_script_execute()
-	
 	self:display_and_vsync()
 end
 
 function Game:end_master_display_list()
 	Gbi.gSPEndDisplayList(self.gDisplayList)
+end
+
+-- Clears the framebuffer, allowing it to be overwritten.
+function Game:clear_frame_buffer(color)
+	Gbi.gDPSetRenderMode(self.gDisplayList, Gbi.G_RM_OPA_SURF_SURF2)
+	Gbi.gDPSetCycleType(self.gDisplayList, Gbi.G_CYC_FILL)
+
+	Gbi.gDPSetFillColor(self.gDisplayList, color)
+	Gbi.gDPFillRectangle(self.gDisplayList, 0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1)
+
+	Gbi.gDPSetCycleType(self.gDisplayList, Gbi.G_CYC_1CYCLE)
 end
 
 function Game:config_gfx_pool()
@@ -60,8 +73,13 @@ function Game:display_and_vsync()
 	gGlobalTimer = gGlobalTimer+1
 end
 
+function Game:warp_to(level)
+	LevelUpdate:fade_into_special_warp(level)
+end
+
 function Game:snapshot_location()
 	return {
+		level = Area.gCurrLevelNum,
 		yaw = LevelUpdate.gMarioState.faceAngle[2] / (0x10000 / 360),
 		x = LevelUpdate.gMarioState.pos[1],
 		y = LevelUpdate.gMarioState.pos[2],

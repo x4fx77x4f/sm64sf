@@ -16,6 +16,29 @@ local D_8032CF00 = { -- default view port?
 
 Area = {}
 
+function Area:area_get_warp_node(id)
+	return self.gCurrentArea.warpNodes[id]
+end
+
+function Area:area_get_warp_node_from_params(o)
+	local warp_id = bit.rshift(bit.band(o.rawData[oBehParams], 0x00FF0000), 16)
+	return self:area_get_warp_node(warp_id)
+end
+
+function Area:load_obj_warp_nodes()
+	do return end
+	for node in ipairs(GeoLayout.gObjParentGraphNode.children) do
+		local object = node.wrapperObjectNode.wrapperObject
+		
+		if object.activeFlags ~= ACTIVE_FLAG_DEACTIVATED and LevelUpdate:get_mario_spawn_type(object) ~= 0 then
+			local warp_node = self:area_get_warp_node_from_params(object)
+			if warp_node then
+				warp_node.object = object
+			end
+		end
+	end
+end
+
 function Area:load_area(index)
 	if not self.gCurrentArea and self.gAreas[index] then
 		self.gCurrentArea = self.gAreas[index]
@@ -29,6 +52,20 @@ function Area:load_area(index)
 		if self.gCurrentArea.objectSpawnInfos then
 			--gLinker.ObjectListProcessor.spawn_objects_from_info(this.gCurrentArea.objectSpawnInfos)
 		end
+		
+		self:load_obj_warp_nodes()
+		--geo_call_global_function_nodes(self.gCurrentArea.geometryLayoutData, GEO_CONTEXT_AREA_LOAD)
+	end
+end
+
+function Area:unload_area()
+	if self.gCurrentArea then
+		ObjectListProcessor:unload_objects_from_area(0, self.gCurrentArea.index)
+		geo_call_global_function_nodes(self.gCurrentArea.geometryLayoutData, GEO_CONTEXT_AREA_UNLOAD)
+		
+		self.gCurrentArea.flags = 0
+		self.gCurrentArea = nil
+		self.gWarpTransition.isActive = 0
 	end
 end
 
@@ -37,18 +74,37 @@ function Area:load_mario_area()
 	
 	if self.gCurrentArea.index == self.gMarioSpawnInfo.areaIndex then
 		self.gCurrentArea.flags = bit.bor(self.gCurrentArea.flags, 0x01)
-		--gLinker.ObjectListProcessor.spawn_objects_from_info(this.gMarioSpawnInfo)
+		--ObjectListProcessor:spawn_objects_from_info(self.gMarioSpawnInfo)
 		--[[
 		local marioCloneSpawnInfo = self.gMarioSpawnInfo
 		marioCloneSpawnInfo.startPos[1] = marioCloneSpawnInfo.startPos[1]-500
-		gLinker.ObjectListProcessor.spawn_objects_from_info(this.marioCloneSpawnInfo)
+		ObjectListProcessor:spawn_objects_from_info(self.marioCloneSpawnInfo)
 		--]]
+	end
+end
+
+function Area:unload_mario_area()
+	if self.gCurrentArea and bit.band(self.gCurrentArea.flags, 0x01) ~= 0 then
+		ObjectListProcessor:unload_objects_from_area(0, self.gMarioSpawnInfo.activeAreaIndex)
+		
+		self.gCurrentArea.flags = bit.band(self.gCurrentArea.flags, bit.bnot(0x01))
+		if self.gCurrentArea.flags == 0 then
+			self:unload_area()
+		end
 	end
 end
 
 function Area:area_update_objects()
 	--GeoRenderer.gAreaUpdateCounter = GeoRenderer.gAreaUpdateCounter+1
-	--gLinker.ObjectListProcessor.update_objects(0)
+	--ObjectListProcessor:update_objects(0)
+end
+
+function Area:override_viewport_and_clip(a, b, c, d, e)
+	local sp6 = SF_BOR(bit.lshift(bit.rshift(c, 3), 11), bit.lshift(bit.rshift(d, 3), 6), bit.lshift(bit.rshift(e, 3), 1), 1)
+	
+	self.gFBSetColor = bit.bor(bit.lshift(sp6, 16), sp6)
+	self.D_8032CE74 = a
+	self.D_8032CE78 = a
 end
 
 function Area:set_warp_transition_rgb(red, green, blue)
@@ -60,7 +116,7 @@ function Area:set_warp_transition_rgb(red, green, blue)
 end
 
 function Area:play_transition(transType, time, red, green, blue)
-	self.gWarpTransition.isActive = true
+	self.gWarpTransition.isActive = 1
 	self.gWarpTransition.type = transType
 	self.gWarpTransition.time = time
 	self.gWarpTransition.pauseRendering = false
@@ -109,6 +165,8 @@ end
 
 function Area:clear_areas()
 	self.gCurrentArea = nil
+	self.gWarpTransition.isActive = 0
+	self.gWarpTransition.pauseRendering = 0
 	self.gMarioSpawnInfo.areaIndex = -1
 	
 	for i, areaData in pairs(self.gAreas) do
@@ -120,9 +178,9 @@ function Area:clear_areas()
 			terrainData = nil,
 			surfaceRooms = nil,
 			macroObjects = nil,
-			warpNodes = nil,
-			paintingWarpNodes = nil,
-			instantWarps = nil,
+			warpNodes = {},
+			paintingWarpNodes = {},
+			instantWarps = {},
 			objectSpawnInfos = nil,
 			camera = nil,
 			unused28 = nil,
@@ -134,13 +192,46 @@ function Area:clear_areas()
 	end
 end
 
-function Area:render_game()
+function Area:clear_area_graph_nodes()
 	if self.gCurrentArea then
-		--GeoRenderer:geo_process_root(self.gCurrentArea.geometryLayoutData, nil, nil, nil)
+		geo_call_global_function_nodes(self.gCurrentArea.geometryLayoutData, GEO_CONTEXT_AREA_UNLOAD)
+		self.gCurrentArea = nil
+		self.gWarpTransition.isActive = 0
+	end
+	
+	for i, areaData in pairs(self.gAreas) do
+		if areaData.geometryLayoutData then
+			geo_call_global_function_nodes(areaData.geometryLayoutData, GEO_CONTEXT_AREA_INIT)
+			areaData.geometryLayoutData = nil
+		end
+	end
+end
+
+function Area:render_game()
+	if self.gCurrentArea and not self.gWarpTransition.pauseRendering then
+		GeoRenderer:geo_process_root(self.gCurrentArea.geometryLayoutData, self.D_8032CE74, self.D_8032CE78, self.gFBSetColor)
 		
 		Gbi.gSPViewport(Game.gDisplayList, D_8032CF00)
+		
 		--Hud:render_hud()
 		--Print:render_text_labels()
+		--do_cutscene_handler()
+		--print_displaying_credits_entry()
+		
+		--gPauseScreenMode = render_menus_and_dialogs()
+		
+		--[[
+		if gPauseScreenMode ~= 0 then
+			gSaveOptSelectIndex = gPauseScreenMode
+		end
+		
+		if D_8032CE78 ~= nil then
+			make_viewport_clip_rect(D_8032CE78)
+		else
+			gDisplayListHead = gDisplayListHead+1
+			gDPSetScissor(gDisplayListHead, G_SC_NON_INTERLACE, 0, BORDER_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT - BORDER_HEIGHT)
+		end
+		]]
 		
 		if self.gWarpTransition.isActive then
 			if self.gWarpTransDelay == 0 then
@@ -159,7 +250,15 @@ function Area:render_game()
 		end
 	else
 		--Print:render_text_labels()
+		if self.D_8032CE78 then
+			Game:clear_viewport(self.D_8032CE78, self.gWarpTransFBSetColor)
+		else
+			Game:clear_frame_buffer(self.gWarpTransFBSetColor)
+		end
 	end
+	
+	self.D_8032CE74 = nil
+	self.D_8032CE78 = nil
 end
 
 function Area:print_intro_text()
@@ -181,18 +280,24 @@ Area.gCurAreaIndex = 0
 Area.gCurrLevelNum = 0
 Area.gLoadedGraphNodes = {}
 
+Area.D_8032CE74 = nil
+Area.D_8032CE78 = nil
+
 Area.gMarioSpawnInfo = {
 	startPos = Vector(0, 0, 0),
 	startAngle = Angle(0, 0, 0),
 	areaIndex = 0, activeAreaIndex = 0,
 	behaviorArg = 0, behaviorScript = nil,
-	unk18 = nil, next = nil
+	unk18 = nil,
+	next = nil
 }
 
 Area.gWarpTransition = {
 	data = {}
 }
 Area.gWarpTransDelay = 0
+Area.gFBSetColor = 0
+Area.gWarpTransFBSetColor = 0
 Area.gWarpTransRed = 0
 Area.gWarpTransGreen = 0
 Area.gWarpTransBlue = 0

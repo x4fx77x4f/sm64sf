@@ -22,6 +22,10 @@ BACKGROUND_GREEN_SKY = 7
 BACKGROUND_ABOVE_CLOUDS = 8
 BACKGROUND_PURPLE_SKY = 9
 
+function PAINTING_ID(id, grp)
+	return bit.bor(id, bit.lshift(grp, 8))
+end
+
 local function copy3argsToObject(pos, argIndex, args)
 	for i = argIndex, i < argIndex + 3 do
 		table.insert(pos, args[i])
@@ -29,7 +33,7 @@ local function copy3argsToObject(pos, argIndex, args)
 	return 3
 end
 
-local GeoLayout = {}
+GeoLayout = {}
 GeoLayout.__index = GeoLayout
 
 function GeoLayout.new()
@@ -37,6 +41,8 @@ function GeoLayout.new()
 	
 	self.sCurrentLayout = {}
 	self.gGeoLayoutStack = {}
+	
+	return self
 end
 
 function GeoLayout:next()
@@ -46,10 +52,13 @@ end
 function GeoLayout:branch_and_link(args)
 	-- I'm assuming it's meant to be 'this.gGeoLayoutStack.push(this.sCurrentLayout)'
 	-- and not 'this.gGeoLayoutStack.push = this.sCurrentLayout'????
+	-- sm64js only uses GEO_BRANCH_AND_LINK in red_flame_shadow_geo,
+	-- which is not referenced anywhere, and while the code makes no
+	-- sense, it's not a syntax error so that's prob why it's not fixed.
 	table.insert(self.gGeoLayoutStack, self.sCurrentLayout)
 	table.insert(self.gGeoLayoutStack, self.sCurGraphNodeIndex)
 	self.gGeoLayoutReturnIndex = self.gGeoLayoutStackIndex
-	self.sCurrentLayout = {index = 0, layout = args[1]}
+	self:start_new_layout(args[1])
 end
 
 function GeoLayout:branch(args)
@@ -58,7 +67,7 @@ function GeoLayout:branch(args)
 		table.insert(self.gGeoLayoutStack, self.sCurrentLayout)
 	end
 	
-	self.sCurrentLayout = {index = 0, layout = args[2]}
+	self:start_new_layout(args[2])
 end
 
 -- renamed from 'return'
@@ -89,8 +98,8 @@ function GeoLayout:node_screen_area(args) -- node_root
 end
 
 function GeoLayout:open_node(args)
+	table.insert(self.gCurGraphNodeList, self.gCurGraphNodeList[self.gCurGraphNodeIndex] or false)
 	self.gCurGraphNodeIndex = self.gCurGraphNodeIndex+1
-	table.insert(self.gCurGraphNodeList, self.gCurGraphNodeList[self.gCurGraphNodeIndex])
 	self:next()
 end
 
@@ -338,39 +347,48 @@ function GeoLayout:node_held_object(args)
 	self:next()
 end
 
-function GeoLayout:process_geo_layout(geoLayout)
-	if type(geoLayout) == 'function' then
-		geoLayout = geoLayout()
+function GeoLayout:start_new_layout(layout)
+	if type(layout) == 'function' then
+		layout = layout()
 	end
-	
-	self.sCurrentLayout.layout = geoLayout
-	self.sCurrentLayout.index = 0
+	self.sCurrentLayout = {
+		layout = layout,
+		index = 0
+	}
+end
+
+function GeoLayout:process_geo_layout(geoLayout)
+	self:start_new_layout(geoLayout)
 	
 	-- set a bunch of other initial globals
 	self.gCurRootGraphNode = nil
 	self.gGeoNumViews = 0
 	
 	self.gCurGraphNodeList = {0}
-	self.gCurGraphNodeIndex = 0
+	self.gCurGraphNodeIndex = 1
 	
 	self.gGeoLayoutStackIndex = 2
 	self.gGeoLayoutReturnIndex = 2 -- stack index is often copied here?
 	
 	self.gGeoLayoutStack = {0, 0}
 	
+	--print("processing geo layout")
+	
 	while self.sCurrentLayout.index < #self.sCurrentLayout.layout+(self.sCurrentLayout.layout[0] and 1 or 0) do
 		local cmd = self.sCurrentLayout.layout[self.sCurrentLayout.index]
 		if not cmd then
-			error(sprintf("geo layout out of bounds at %d in %q", self.sCurrentLayout.index, _GR[self.sCurrentLayout.commands]))
+			errorf("geo layout out of bounds at %d in %q", self.sCurrentLayout.index, _GR[self.sCurrentLayout.commands])
 		elseif cmd[0] then
 			self[cmd[0]](self, unpack(cmd))
 		else
 			cmd.command(self, cmd.args)
 		end
 	end
+	
+	--print("finished processing geo layout")
+	--printTable(self.gCurRootGraphNode)
+	return self.gCurRootGraphNode
 end
-
-_G.GeoLayout = GeoLayout.new()
 
 local function wrap(dst, src)
 	src = src or GeoLayout['node_'..string.lower(dst)]
@@ -384,10 +402,12 @@ end
 wrap('ANIMATED_PART')
 wrap('ASM', GeoLayout.node_generated)
 wrap('BACKGROUND')
+wrap('BACKGROUND_COLOR', GeoLayout.node_background)
 wrap('BILLBOARD')
 wrap('BRANCH', GeoLayout.branch)
 wrap('BRANCH_AND_LINK', GeoLayout.branch_and_link)
 wrap('CAMERA')
+wrap('CAMERA_FRUSTUM', GeoLayout.node_perspective)
 wrap('CAMERA_FRUSTRUM_WITH_FUNC', GeoLayout.node_perspective)
 wrap('CLOSE_NODE', GeoLayout.close_node)
 wrap('CULLING_RADIUS')
@@ -406,9 +426,6 @@ wrap('SCALE')
 wrap('SHADOW')
 wrap('SWITCH_CASE')
 wrap('TRANSLATE_NODE', GeoLayout.node_translate)
+wrap('TRANSLATE_NODE_WITH_DL', GeoLayout.node_translate)
 wrap('TRANSLATE_ROTATE')
 wrap('ZBUFFER', GeoLayout.node_master_list)
--- non-sm64js
-wrap('BACKGROUND_COLOR', GeoLayout.node_background)
-wrap('CAMERA_FRUSTUM', GeoLayout.node_perspective)
-wrap('TRANSLATE_NODE_WITH_DL', GeoLayout.node_translate)

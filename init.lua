@@ -104,6 +104,9 @@ function ArrayMeta:fill(n)
 	return self
 end
 function ArrayMeta:map(func)
+	if type(func) ~= 'function' then
+		error("bad argument #1 to 'map' (expected function)", 2)
+	end
 	for k, v in pairs(self) do
 		if k ~= '_array_max' then
 			self[k] = func(k, v) or self[k]
@@ -139,7 +142,7 @@ function table.find(tbl, func)
 			return v
 		end
 	end
-	for k, v in ipairs(func) do
+	for k, v in ipairs(tbl) do
 		if func(v, k, tbl) then
 			return v
 		end
@@ -174,8 +177,12 @@ local thread = coroutine.create(function()
 		--@include sm64sf/src/buffers/buffers.lua
 		require('sm64sf/src/buffers/buffers.lua')
 		
+		--@include sm64sf/src/engine/graph_node.lua
+		require('sm64sf/src/engine/graph_node.lua')
 		--@include sm64sf/src/engine/geo_layout.lua
 		require('sm64sf/src/engine/geo_layout.lua')
+		--@include sm64sf/src/engine/geo_renderer.lua
+		require('sm64sf/src/engine/geo_renderer.lua')
 		--@include sm64sf/src/engine/level_script.lua
 		require('sm64sf/src/engine/level_script.lua')
 		--@include sm64sf/src/engine/math_util.lua
@@ -217,6 +224,8 @@ local thread = coroutine.create(function()
 			end
 		end
 		
+		GeoLayout = GeoLayout.new()
+		GeoRenderer = GeoRenderer.new()
 		Game:initialize()
 		startGame()
 		
