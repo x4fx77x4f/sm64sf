@@ -37,6 +37,13 @@ VERSION_US = true -- 1996 North American version
 VERSION_EU = false -- 1997 PAL version
 VERSION_SH = false -- 1997 Japanese Shindou version
 
+ENABLE_RUMBLE = false or VERSION_SH
+
+SCREEN_WIDTH = 320
+SCREEN_HEIGHT = 240
+
+BORDER_HEIGHT = 0
+
 --@include ./game/area.lua
 dofile('./game/area.lua')
 --@include ./engine/geo_layout.lua
@@ -71,6 +78,9 @@ hook.add('render', '', function()
 	local now = timer.systime()
 	
 	guest_frame_passed = coroutine.resume(thread)
+	render.disableScissorRect()
+	render.selectRenderTarget()
+	local rt = draw_framebuffer()
 	
 	if VERBOSE then
 		frames = frames+1
@@ -88,9 +98,11 @@ hook.add('render', '', function()
 		local osd_t = string.format(
 			"%3d host framerate\n"..
 			"%3d guest framerate\n"..
+			"rt %s\n"..
 			"%s",
 			framerate,
 			framerate_guest,
+			rt,
 			osd_t
 		)
 		local osd_w, osd_h = render.getTextSize(osd_t)

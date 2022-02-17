@@ -71,6 +71,8 @@ local gWarpTransition = WarpTransition()
 
 gAreas = gAreaData
 gCurrentArea = nil
+local D_8032CE74 = nil
+local D_8032CE78 = nil
 local gWarpTransFBSetColor = Color(0, 0, 0, 0)
 local gWarpTransRed = 0
 local gWarpTransGreen = 0
@@ -173,4 +175,18 @@ function play_transition(transType, time, red, green, blue)
 	end
 end
 
-function render_game() end
+function render_game()
+	if gCurrentArea and not gWarpTransition.pauseRendering then
+		
+	else
+		--render_text_labels()
+		if D_8032CE78 then
+			clear_viewport(D_8032CE78, gWarpTransFBSetColor)
+		else
+			clear_framebuffer(gWarpTransFBSetColor)
+		end
+	end
+	
+	D_8032CE74 = nil
+	D_8032CE78 = nil
+end
