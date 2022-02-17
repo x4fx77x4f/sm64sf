@@ -59,7 +59,7 @@ end
 
 local function level_cmd_load_and_execute(args)
 	-- The first three parameters are only relevant on real hardware, so they can be ignored.
-	table.insert(sStack, sCurrentScript)
+	table.insert(sStack, sCurrentCmd)
 	table.insert(sStack, sCurrentIndex)
 	sCurrentCmd = assertf(args[4], "tried to EXECUTE non-existent script from %d", sCurrentIndex)
 	return 1
@@ -102,7 +102,7 @@ local function level_cmd_sleep2(args)
 end
 
 local function level_cmd_jump(args)
-	sCurrentScript = args[1]
+	sCurrentCmd = args[1]
 	return 1
 end
 
