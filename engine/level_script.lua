@@ -161,9 +161,8 @@ local function level_cmd_end_area(args)
 end
 
 local function level_cmd_set_transition(args)
-	-- Does nothing as the file that creates gCurrentArea has not been ported.
 	if gCurrentArea then
-		play_transition(args[2], args[3], args[4], args[5], args[6])
+		play_transition(args[1], args[2], args[3], args[4], args[5])
 	end
 end
 
@@ -173,11 +172,13 @@ end
 
 local function level_cmd_load_area(args)
 	local areaIndex = args[1]
-	-- TODO: Unstub LOAD_AREA
+	
+	--stop_sounds_in_continuous_banks()
+	load_area(areaIndex)
 end
 
 local function level_cmd_unload_area(args)
-	-- TODO: Unstub CMD2A
+	unload_area()
 end
 
 wrap(0x00, 'EXECUTE', level_cmd_load_and_execute)
@@ -255,7 +256,9 @@ function level_script_execute(cmd, index)
 		local new_index = cmd[2](cmd[3])
 		sCurrentIndex = new_index or sCurrentIndex+1
 	end
-	
 	osdprintf("sScriptStatus: %2i\nsCurrentCmd: 0x%02x\n", sScriptStatus, sCurrentCmd[sCurrentIndex][1])
+	
+	render_game()
+	
 	return sCurrentCmd, sCurrentIndex
 end
