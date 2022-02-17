@@ -65,6 +65,12 @@ local function level_cmd_load_and_execute(args)
 	return 1
 end
 
+local function level_cmd_exit_and_execute(args)
+	-- The first three parameters are only relevant on real hardware, so they can be ignored.
+	sCurrentCmd = assertf(args[4], "tried to EXIT_AND_EXECUTE non-existent script from %d", sCurrentIndex)
+	return 1
+end
+
 local function level_cmd_sleep(args)
 	sScriptStatus = SCRIPT_PAUSED
 	if sDelayFrames == 0 then
@@ -74,6 +80,23 @@ local function level_cmd_sleep(args)
 		sDelayFrames = sDelayFrames-1
 		if sDelayFrames == 0 then
 			sScriptStatus = SCRIPT_RUNNING
+		else
+			return sCurrentIndex
+		end
+	end
+end
+
+local function level_cmd_sleep2(args)
+	sScriptStatus = SCRIPT_PAUSED
+	if sDelayFrames == 0 then
+		sDelayFrames2 = args[1]
+		return sCurrentIndex
+	else
+		sDelayFrames2 = sDelayFrames2-1
+		if sDelayFrames2 == 0 then
+			sScriptStatus = SCRIPT_RUNNING
+		else
+			return sCurrentIndex
 		end
 	end
 end
@@ -103,6 +126,10 @@ local function level_cmd_init_level(args)
 	-- TODO: Unstub INIT_LEVEL
 end
 
+local function level_cmd_clear_level(args)
+	-- TODO: Unstub CLEAR_LEVEL
+end
+
 local function level_cmd_alloc_level_pool(args) end
 
 local function level_cmd_free_level_pool(args) end
@@ -121,6 +148,13 @@ local function level_cmd_end_area(args)
 	--sCurrAreaIndex = sCurrAreaIndex-1
 end
 
+local function level_cmd_set_transition(args)
+	-- Does nothing as the file that creates gCurrentArea has not been ported.
+	if gCurrentArea then
+		play_transition(args[2], args[3], args[4], args[5], args[6])
+	end
+end
+
 local function level_cmd_set_blackout(args)
 	-- TODO: Unstub BLACKOUT
 end
@@ -128,6 +162,10 @@ end
 local function level_cmd_load_area(args)
 	local areaIndex = args[1]
 	-- TODO: Unstub LOAD_AREA
+end
+
+local function level_cmd_unload_area(args)
+	-- TODO: Unstub CMD2A
 end
 
 wrap(0x00, 'EXECUTE', level_cmd_load_and_execute)
