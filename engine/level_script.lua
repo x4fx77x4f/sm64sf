@@ -53,23 +53,22 @@ local function wrap(i, macro_name, func)
 		errorf("level command '%s' not implemented", macro_name)
 	end
 	_G[macro_name] = function(...)
-		return {[-1]=i, [0]=func, ...}
+		return {i, func, {...}}
 	end
 end
 
-local function level_cmd_load_and_execute(entry)
-	assertf(entry, "tried to EXECUTE non-existent script from %d", sCurrentIndex)
+local function level_cmd_load_and_execute(args)
+	-- The first three parameters are only relevant on real hardware, so they can be ignored.
 	table.insert(sStack, sCurrentScript)
 	table.insert(sStack, sCurrentIndex)
-	sCurrentCmd = entry
+	sCurrentCmd = assertf(args[4], "tried to EXECUTE non-existent script from %d", sCurrentIndex)
 	return 1
 end
-wrap(0x00, 'EXECUTE', level_cmd_load_and_execute)
 
-local function level_cmd_sleep(frames)
+local function level_cmd_sleep(args)
 	sScriptStatus = SCRIPT_PAUSED
 	if sDelayFrames == 0 then
-		sDelayFrames = frames
+		sDelayFrames = args[1]
 		return sCurrentIndex
 	else
 		sDelayFrames = sDelayFrames-1
@@ -78,28 +77,123 @@ local function level_cmd_sleep(frames)
 		end
 	end
 end
-wrap(0x03, 'SLEEP', level_cmd_sleep)
 
-local function level_cmd_jump(target)
-	sCurrentScript = target
+local function level_cmd_jump(args)
+	sCurrentScript = args[1]
 	return 1
 end
-wrap(0x05, 'JUMP', level_cmd_jump)
 
-local function level_cmd_set_register(value)
-	sRegister = value
+local function level_cmd_call(args)
+	local func = args[2]
+	assertf(func, "tried to CALL non-existent function from %d", sCurrentIndex)
+	sRegister = func(args[1], sRegister)
 end
-wrap(0x13, 'SET_REG', level_cmd_set_register)
 
-local function level_cmd_init_level()
+local function level_cmd_set_register(args)
+	sRegister = args[1]
+end
+
+local function level_cmd_load_to_fixed_address(args) end
+
+local function level_cmd_load_raw(args) end
+
+local function level_cmd_load_mio0(args) end
+
+local function level_cmd_init_level(args)
 	-- TODO: Unstub INIT_LEVEL
 end
-wrap(0x1b, 'INIT_LEVEL', level_cmd_init_level)
 
-local function level_cmd_set_blackout(active)
+local function level_cmd_alloc_level_pool(args) end
+
+local function level_cmd_free_level_pool(args) end
+
+local function level_cmd_begin_area(args)
+	local areaIndex = args[1]
+	local geoLayout = args[2]
+	
+	if areaIndex < 8 then
+		-- TODO: Unstub AREA
+	end
+end
+
+local function level_cmd_end_area(args)
+	-- TODO: Unstub END_AREA
+	--sCurrAreaIndex = sCurrAreaIndex-1
+end
+
+local function level_cmd_set_blackout(args)
 	-- TODO: Unstub BLACKOUT
 end
+
+local function level_cmd_load_area(args)
+	local areaIndex = args[1]
+	-- TODO: Unstub LOAD_AREA
+end
+
+wrap(0x00, 'EXECUTE', level_cmd_load_and_execute)
+wrap(0x01, 'EXIT_AND_EXECUTE', level_cmd_exit_and_execute)
+wrap(0x02, 'EXIT', level_cmd_exit)
+wrap(0x03, 'SLEEP', level_cmd_sleep)
+wrap(0x04, 'SLEEP_BEFORE_EXIT', level_cmd_sleep2)
+wrap(0x05, 'JUMP', level_cmd_jump)
+wrap(0x06, 'JUMP_LINK', level_cmd_jump_and_link)
+wrap(0x07, 'RETURN', level_cmd_return)
+wrap(0x08, 'JUMP_LINK_PUSH_ARG', level_cmd_jump_and_link_push_arg)
+wrap(0x09, 'JUMP_N_TIMES', level_cmd_jump_repeat)
+wrap(0x0A, 'LOOP_BEGIN', level_cmd_loop_begin)
+wrap(0x0B, 'LOOP_UNTIL', level_cmd_loop_until)
+wrap(0x0C, 'JUMP_IF', level_cmd_jump_if)
+wrap(0x0D, 'JUMP_LINK_IF', level_cmd_jump_and_link_if)
+wrap(0x0E, 'SKIP_IF', level_cmd_skip_if)
+wrap(0x0F, 'SKIP', level_cmd_skip)
+wrap(0x10, 'SKIP_NOP', level_cmd_skippable_nop)
+wrap(0x11, 'CALL', level_cmd_call)
+wrap(0x12, 'CALL_LOOP', level_cmd_call_loop)
+wrap(0x13, 'SET_REG', level_cmd_set_register)
+wrap(0x14, 'PUSH_POOL', level_cmd_push_pool_state)
+wrap(0x15, 'POP_POOL', level_cmd_pop_pool_state)
+wrap(0x16, 'FIXED_LOAD', level_cmd_load_to_fixed_address)
+wrap(0x17, 'LOAD_RAW', level_cmd_load_raw)
+wrap(0x18, 'LOAD_MIO0', level_cmd_load_mio0)
+wrap(0x19, 'LOAD_MARIO_HEAD', level_cmd_load_mario_head)
+wrap(0x1A, 'LOAD_MIO0_TEXTURE', level_cmd_load_mio0_texture)
+wrap(0x1B, 'INIT_LEVEL', level_cmd_init_level)
+wrap(0x1C, 'CLEAR_LEVEL', level_cmd_clear_level)
+wrap(0x1D, 'ALLOC_LEVEL_POOL', level_cmd_alloc_level_pool)
+wrap(0x1E, 'FREE_LEVEL_POOL', level_cmd_free_level_pool)
+wrap(0x1F, 'AREA', level_cmd_begin_area)
+wrap(0x20, 'END_AREA', level_cmd_end_area)
+wrap(0x21, 'LOAD_MODEL_FROM_DL', level_cmd_load_model_from_dl)
+wrap(0x22, 'LOAD_MODEL_FROM_GEO', level_cmd_load_model_from_geo)
+wrap(0x23, 'CMD23', level_cmd_23)
+wrap(0x24, 'OBJECT_WITH_ACTS', level_cmd_place_object)
+function OBJECT(model, posX, posY, posZ, angleX, angleY, angleZ, behParam, beh)
+	return OBJECT_WITH_ACTS(model, posX, posY, posZ, angleX, angleY, angleZ, behParam, beh, 0x1F)
+end
+wrap(0x25, 'MARIO', level_cmd_init_mario)
+wrap(0x26, 'WARP_NODE', level_cmd_create_warp_node)
+wrap(0x27, 'PAINTING_WARP_NODE', level_cmd_create_painting_warp_node)
+wrap(0x28, 'INSTANT_WARP', level_cmd_create_instant_warp)
+wrap(0x29, 'LOAD_AREA', level_cmd_load_area)
+wrap(0x2A, 'CMD2A', level_cmd_unload_area)
+wrap(0x2B, 'MARIO_POS', level_cmd_set_mario_start_pos)
+wrap(0x2C, 'CMD2C', level_cmd_2C)
+wrap(0x2D, 'CMD2D', level_cmd_2D)
+wrap(0x2E, 'TERRAIN', level_cmd_set_terrain_data)
+wrap(0x2F, 'ROOMS', level_cmd_set_rooms)
+wrap(0x30, 'SHOW_DIALOG', level_cmd_show_dialog)
+wrap(0x31, 'TERRAIN_TYPE', level_cmd_set_terrain_type)
+wrap(0x32, 'NOP', level_cmd_nop)
+wrap(0x33, 'TRANSITION', level_cmd_set_transition)
 wrap(0x34, 'BLACKOUT', level_cmd_set_blackout)
+wrap(0x35, 'GAMMA', level_cmd_set_gamma)
+wrap(0x36, 'SET_BACKGROUND_MUSIC', level_cmd_set_music)
+wrap(0x37, 'SET_MENU_MUSIC', level_cmd_set_menu_music)
+wrap(0x38, 'STOP_MUSIC', level_cmd_38)
+wrap(0x39, 'MACRO_OBJECTS', level_cmd_set_macro_objects)
+wrap(0x3A, 'CMD3A', level_cmd_3A)
+wrap(0x3B, 'WHIRLPOOL', level_cmd_create_whirlpool)
+wrap(0x3C, 'GET_OR_SET', level_cmd_get_or_set_var)
 
 function level_script_execute(cmd, index)
 	sScriptStatus = SCRIPT_RUNNING
@@ -108,10 +202,10 @@ function level_script_execute(cmd, index)
 	
 	while sScriptStatus == SCRIPT_RUNNING do
 		local cmd = sCurrentCmd[sCurrentIndex]
-		local new_index = cmd[0](unpack(cmd))
+		local new_index = cmd[2](cmd[3])
 		sCurrentIndex = new_index or sCurrentIndex+1
 	end
 	
-	osdprintf("sScriptStatus: %2i\nsCurrentCmd: 0x%02x\n", sScriptStatus, sCurrentCmd[sCurrentIndex][-1])
+	osdprintf("sScriptStatus: %2i\nsCurrentCmd: 0x%02x\n", sScriptStatus, sCurrentCmd[sCurrentIndex][1])
 	return sCurrentCmd, sCurrentIndex
 end

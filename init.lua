@@ -35,6 +35,8 @@ end
 
 --@include ./engine/level_script.lua
 dofile('./engine/level_script.lua')
+--@include ./levels/intro/script.lua
+dofile('./levels/intro/script.lua')
 --@include ./levels/entry.lua
 dofile('./levels/entry.lua')
 
