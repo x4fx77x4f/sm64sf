@@ -13,12 +13,14 @@ gGlobalTimer = 0
 -- This function...
 -- ...would send the current master display list out to be rendered,
 -- ...would tell the VI which color framebuffer to be displayed,
--- ...yields until a 30th of a second has passed, locking the game at 30 FPS,
+-- ...yields until the resume time is reached, locking the game to 30 FPS,
 -- ...and would select which framebuffer will be rendered and displayed to next time.
 local function display_and_vsync(resume_time)
 	coroutine.yield(true)
-	while timer.systime() < resume_time do
-		coroutine.yield()
+	if resume_time then
+		while timer.systime() < resume_time do
+			coroutine.yield()
+		end
 	end
 	gGlobalTimer = gGlobalTimer+1
 end

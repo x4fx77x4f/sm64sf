@@ -1,5 +1,4 @@
---@name sm64sf2
---@author Sarah
+--@name SM64SF
 --@client
 
 -- The equivalent of this file in sm64js is 'src/index.js'
@@ -32,6 +31,16 @@ else
 	function osdprintf() end
 	function osdclear() end
 end
+
+VERSION_JP = false -- 1996 Japanese version
+VERSION_US = true -- 1996 North American version
+VERSION_EU = false -- 1997 PAL version
+VERSION_SH = false -- 1997 Japanese Shindou version
+
+--@include ./game/area.lua
+dofile('./game/area.lua')
+--@include ./engine/geo_layout.lua
+dofile('./engine/geo_layout.lua')
 
 --@include ./engine/level_script.lua
 dofile('./engine/level_script.lua')

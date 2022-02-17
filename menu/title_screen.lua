@@ -6,9 +6,11 @@ LVL_INTRO_REGULAR = 1
 LVL_INTRO_GAME_OVER = 2
 LVL_INTRO_LEVEL_SELECT = 3
 
+-- This file implements how title screen functions, which includes playing demo sequences, introduction screens and a level select used for testing purposes.
+
 local sDemoCountdown = 0
-local sPlayMarioGreeting = true
-local sPlayMarioGameOver = true
+local sPlayMarioGreeting = not VERSION_JP
+local sPlayMarioGameOver = not VERSION_JP
 
 local PRESS_START_DEMO_TIMER = 800
 
@@ -19,9 +21,7 @@ local function run_level_id_or_demo(level)
 	error("TODO: Implement run_level_id_or_demo")
 end
 
--- Level select intro function, updates the selected stage
--- count if an input was received. signals the stage to be started
--- or the level select to be exited if start or the quit combo is pressed.
+-- Level select intro function, updates the selected stage count if an input was received. Signals the stage to be started or the level select to be exited if start or the quit combo is pressed.
 local function intro_level_select()
 	error("TODO: Implement intro_level_select")
 end

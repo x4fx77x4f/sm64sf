@@ -123,11 +123,17 @@ local function level_cmd_load_raw(args) end
 local function level_cmd_load_mio0(args) end
 
 local function level_cmd_init_level(args)
-	-- TODO: Unstub INIT_LEVEL
+	--init_graph_node_start(nil, gObjParentGraphNode)
+	--clear_objects()
+	clear_areas()
+	--main_pool_push_state()
 end
 
 local function level_cmd_clear_level(args)
-	-- TODO: Unstub CLEAR_LEVEL
+	--clear_objects()
+	--clear_area_graph_nodes()
+	clear_areas()
+	--main_pool_pop_state()
 end
 
 local function level_cmd_alloc_level_pool(args) end
@@ -139,13 +145,19 @@ local function level_cmd_begin_area(args)
 	local geoLayout = args[2]
 	
 	if areaIndex < 8 then
-		-- TODO: Unstub AREA
+		local screenArea = process_geo_layout(sLevelPool, geoLayout)
+		local node = nil and screenArea.views[0] -- TODO: Don't forget to undo this hack once geo_layout is implemented
+		
+		sCurrAreaIndex = areaIndex
+		screenArea.areaIndex = areaIndex
+		gAreas[areaIndex].unk04 = screenArea
+		
+		gAreas[areaIndex].camera = node and node.config.camera or nil
 	end
 end
 
 local function level_cmd_end_area(args)
-	-- TODO: Unstub END_AREA
-	--sCurrAreaIndex = sCurrAreaIndex-1
+	sCurrAreaIndex = -1
 end
 
 local function level_cmd_set_transition(args)
