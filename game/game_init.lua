@@ -31,6 +31,15 @@ function clear_framebuffer(color)
 	render.drawRect(0, BORDER_HEIGHT, SCREEN_WIDTH-1, SCREEN_HEIGHT-BORDER_HEIGHT-1)
 end
 
+function Vp()
+	return {
+		vp = {
+			vscale = Vector(),
+			vtrans = Vector(),
+		}
+	}
+end
+
 -- Like clear_framebuffer, but only clears part of the screen.
 function clear_viewport(viewport, color)
 	local vpUlx = (viewport.vp.vtrans[1] - viewport.vp.vscale[1]) / 4 + 1
@@ -40,6 +49,16 @@ function clear_viewport(viewport, color)
 	
 	render.setColor(color)
 	render.drawRect(vpUlx, vpUly, vpLrx, vpLry)
+end
+
+-- Defines the viewport scissoring rectangle.
+function make_viewport_clip_rect(viewport)
+	local vpUlx = (viewport.vp.vtrans[1] - viewport.vp.vscale[1]) / 4 + 1
+	local vpUly = (viewport.vp.vtrans[2] - viewport.vp.vscale[2]) / 4 + 1
+	local vpLrx = (viewport.vp.vtrans[1] + viewport.vp.vscale[1]) / 4 - 2
+	local vpLry = (viewport.vp.vtrans[2] + viewport.vp.vscale[2]) / 4 - 2
+	
+	render.enableScissorRect(vpUlx, vpUly, vpLrx, vpLry)
 end
 
 -- Initial settings for the first rendered frame.

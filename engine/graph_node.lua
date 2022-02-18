@@ -83,7 +83,7 @@ end
 
 -- The very root of the geo tree. Specifies the viewport.
 local function GraphNodeRoot()
-	return {
+	local obj = {
 		node = GraphNode(),
 		areaIndex = 0x00,
 		x = -0x0000,
@@ -93,6 +93,8 @@ local function GraphNodeRoot()
 		numViews = -0x0000,
 		views = nil,
 	}
+	obj.node.root = obj -- Hack
+	return obj
 end
 function init_graph_node_root(graphNode, areaIndex, x, y, width, height)
 	graphNode = graphNode or GraphNodeRoot()

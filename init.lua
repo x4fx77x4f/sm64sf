@@ -50,6 +50,8 @@ dofile('./game/screen_transition.lua')
 dofile('./game/area.lua')
 --@include ./engine/graph_node.lua
 dofile('./engine/graph_node.lua')
+--@include ./game/rendering_graph_node.lua
+dofile('./game/rendering_graph_node.lua')
 --@include ./engine/geo_layout.lua
 dofile('./engine/geo_layout.lua')
 

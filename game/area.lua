@@ -63,6 +63,7 @@ gCurrentArea = nil
 local D_8032CE74 = nil
 local D_8032CE78 = nil
 local gWarpTransDelay = 0
+local gFBSetColor = 0
 local gWarpTransFBSetColor = Color(0, 0, 0, 0)
 local gWarpTransRed = 0
 local gWarpTransGreen = 0
@@ -167,6 +168,8 @@ end
 
 function render_game()
 	if gCurrentArea and not gWarpTransition.pauseRendering then
+		geo_process_root(gCurrentArea.unk04, D_8032CE74, D_8032CE78, gFBSetColor)
+		
 		render.enableScissorRect(0, BORDER_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT-BORDER_HEIGHT)
 		--render_hud()
 		

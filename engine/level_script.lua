@@ -136,8 +136,9 @@ local function level_cmd_begin_area(args)
 	local geoLayout = args[2]
 	
 	if areaIndex < 8 then
-		local screenArea = process_geo_layout(sLevelPool, geoLayout)
-		local node = nil and screenArea.views[0] -- TODO: Don't forget to undo this hack once geo_layout is implemented
+		-- Something funny is happening here. The original C code is specifying the return struct. I think some kind of cast or conversion is happening, but I'm not really sure how to deal with it properly.
+		local screenArea = process_geo_layout(sLevelPool, geoLayout).root -- Hack
+		local node = false and screenArea.views[1] -- TODO: For some reason, if I do this, the node has no config field.
 		
 		sCurrAreaIndex = areaIndex
 		screenArea.areaIndex = areaIndex

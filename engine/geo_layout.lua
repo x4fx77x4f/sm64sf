@@ -77,6 +77,7 @@ local function geo_layout_cmd_node_root(args)
 	end
 	
 	register_scene_graph_node(graphNode.node)
+	printf("[geo_layout_cmd_node_root] %s, %s, %s\n", tostring(graphNode), tostring(graphNode.node), tostring(graphNode.node.node))
 end
 
 -- 0x09: Create orthographic projection scene graph node
