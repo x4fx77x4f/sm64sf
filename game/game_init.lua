@@ -19,7 +19,7 @@ local sRenderingFramebuffer = 0x0000
 
 -- Selects the current one of the three framebuffers.
 local function select_framebuffer()
-	render.selectRenderTarget(gPhysicalFramebuffers[sRenderingFramebuffer])
+	render.selectRenderTarget(assertf(gPhysicalFramebuffers[sRenderingFramebuffer], "bad sRenderingFramebuffer %d", sRenderingFramebuffer))
 	render.enableScissorRect(0, BORDER_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT-BORDER_HEIGHT)
 end
 
@@ -63,6 +63,7 @@ local function handle_vsync(resume_time)
 	end
 	sRenderedFramebuffer = (sRenderedFramebuffer+1)%3
 	sRenderingFramebuffer = (sRenderingFramebuffer+1)%3
+	select_framebuffer()
 	gGlobalTimer = gGlobalTimer+1
 end
 

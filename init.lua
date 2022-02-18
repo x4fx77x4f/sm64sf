@@ -11,7 +11,7 @@ function assertf(cond, ...)
 	if not cond then
 		return error(sprintf(...))
 	end
-	return cond, ...
+	return cond
 end
 
 VERBOSE = true
@@ -44,6 +44,8 @@ SCREEN_HEIGHT = 240
 
 BORDER_HEIGHT = 0
 
+--@include ./game/screen_transition.lua
+dofile('./game/screen_transition.lua')
 --@include ./game/area.lua
 dofile('./game/area.lua')
 --@include ./engine/geo_layout.lua

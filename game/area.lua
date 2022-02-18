@@ -41,17 +41,6 @@ local function WarpTransitionData()
 	}
 end
 
-WARP_TRANSITION_FADE_FROM_COLOR = 0x00
-WARP_TRANSITION_FADE_INTO_COLOR = 0x01
-WARP_TRANSITION_FADE_FROM_STAR = 0x08
-WARP_TRANSITION_FADE_INTO_STAR = 0x09
-WARP_TRANSITION_FADE_FROM_CIRCLE = 0x0A
-WARP_TRANSITION_FADE_INTO_CIRCLE = 0x0B
-WARP_TRANSITION_FADE_FROM_MARIO = 0x10
-WARP_TRANSITION_FADE_INTO_MARIO = 0x11
-WARP_TRANSITION_FADE_FROM_BOWSER = 0x12
-WARP_TRANSITION_FADE_INTO_BOWSER = 0x13
-
 local function WarpTransition()
 	return {
 		isActive = false, -- Is the transition active. (either true or false)
@@ -73,6 +62,7 @@ gAreas = gAreaData
 gCurrentArea = nil
 local D_8032CE74 = nil
 local D_8032CE78 = nil
+local gWarpTransDelay = 0
 local gWarpTransFBSetColor = Color(0, 0, 0, 0)
 local gWarpTransRed = 0
 local gWarpTransGreen = 0
@@ -176,8 +166,41 @@ function play_transition(transType, time, red, green, blue)
 end
 
 function render_game()
+	render.setRGBA(255, 0, 0, 255)
+	render.drawRect(0, 0, 512, 16)
 	if gCurrentArea and not gWarpTransition.pauseRendering then
+		render.enableScissorRect(0, BORDER_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT-BORDER_HEIGHT)
+		--render_hud()
 		
+		render.enableScissorRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
+		--render_text_labels()
+		--do_cutscene_handler()
+		--print_displaying_credits_entry()
+		
+		render.enableScissorRect(0, BORDER_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT-BORDER_HEIGHT)
+		--render_menus_and_dialogs()
+		
+		if D_8032CE78 then
+			make_viewport_clip_rect(D_8032CE78)
+		else
+			render.enableScissorRect(0, BORDER_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT-BORDER_HEIGHT)
+		end
+		
+		if gWarpTransition.isActive then
+			osdprintf("gWarpTransDelay: %d\n", gWarpTransDelay)
+			if gWarpTransDelay == 0 then
+				gWarpTransition.isActive = not render_screen_transition(1, gWarpTransition.type, gWarpTransition.time, gWarpTransition.data)
+				if not gWarpTransition.isActive then
+					if bit.band(gWarpTransition.type, 1) ~= 0 then
+						gWarpTransition.pauseRendering = true
+					else
+						set_warp_transition_rgb(0, 0, 0)
+					end
+				end
+			else
+				gWarpTransDelay = gWarpTransDelay-1
+			end
+		end
 	else
 		--render_text_labels()
 		if D_8032CE78 then
