@@ -33,6 +33,7 @@ local function set_transition_color_fade_alpha(fadeType, fadeTimer, transTime)
 	elseif fadeType == 1 then
 		return (1.0 - sTransitionColorFadeCount[fadeTimer] / (transTime - 1)) * 255.0 -- fade out
 	end
+	errorf("unknown fadeType %d", fadeType or -1)
 end
 
 local function dl_transition_color(fadeTimer, transTime, transData, alpha)
@@ -64,6 +65,6 @@ local lookup = {
 	[WARP_TRANSITION_FADE_INTO_BOWSER] = {render_textured_transition, TEX_TRANS_BOWSER, TRANS_TYPE_MIRROR},
 }
 function render_screen_transition(fadeTimer, transType, transTime, transData)
-	local func, texID, transTexType = unpack(assertf(lookup[transType], "invalid transType 0x%02x", transType or 0xbad))
-	func(fadeTimer, transTime, transData, texID, transTexType)
+	local func, texID, transTexType = unpack(assertf(lookup[transType], "invalid transType 0x%02x", transType or 0xff))
+	return func(fadeTimer, transTime, transData, texID, transTexType)
 end

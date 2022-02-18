@@ -166,8 +166,6 @@ function play_transition(transType, time, red, green, blue)
 end
 
 function render_game()
-	render.setRGBA(255, 0, 0, 255)
-	render.drawRect(0, 0, 512, 16)
 	if gCurrentArea and not gWarpTransition.pauseRendering then
 		render.enableScissorRect(0, BORDER_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT-BORDER_HEIGHT)
 		--render_hud()

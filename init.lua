@@ -82,6 +82,7 @@ hook.add('render', '', function()
 	guest_frame_passed = coroutine.resume(thread)
 	render.disableScissorRect()
 	render.selectRenderTarget()
+	render.setRGBA(255, 255, 255, 255)
 	local rt = draw_framebuffer()
 	
 	if VERBOSE then
