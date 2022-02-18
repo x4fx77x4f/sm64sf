@@ -48,6 +48,8 @@ BORDER_HEIGHT = 0
 dofile('./game/screen_transition.lua')
 --@include ./game/area.lua
 dofile('./game/area.lua')
+--@include ./engine/graph_node.lua
+dofile('./engine/graph_node.lua')
 --@include ./engine/geo_layout.lua
 dofile('./engine/geo_layout.lua')
 
@@ -55,6 +57,8 @@ dofile('./engine/geo_layout.lua')
 dofile('./engine/level_script.lua')
 --@include ./menu/title_screen.lua
 dofile('./menu/title_screen.lua')
+--@include ./levels/intro/geo.lua
+dofile('./levels/intro/geo.lua')
 --@include ./levels/intro/script.lua
 dofile('./levels/intro/script.lua')
 --@include ./levels/entry.lua

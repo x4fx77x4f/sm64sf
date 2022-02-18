@@ -48,15 +48,6 @@ local sRegister
 local sCurrentCmd
 local sCurrentIndex
 
-local function wrap(i, macro_name, func)
-	func = func or function()
-		errorf("level command '%s' not implemented", macro_name)
-	end
-	_G[macro_name] = function(...)
-		return {i, func, {...}}
-	end
-end
-
 local function level_cmd_load_and_execute(args)
 	-- The first three parameters are only relevant on real hardware, so they can be ignored.
 	table.insert(sStack, sCurrentCmd)
@@ -181,6 +172,14 @@ local function level_cmd_unload_area(args)
 	unload_area()
 end
 
+local function wrap(i, macro_name, func)
+	func = func or function()
+		errorf("level command '%s' not implemented", macro_name)
+	end
+	_G[macro_name] = function(...)
+		return {i, func, {...}}
+	end
+end
 wrap(0x00, 'EXECUTE', level_cmd_load_and_execute)
 wrap(0x01, 'EXIT_AND_EXECUTE', level_cmd_exit_and_execute)
 wrap(0x02, 'EXIT', level_cmd_exit)
@@ -255,6 +254,7 @@ function level_script_execute(cmd, index)
 		local cmd = sCurrentCmd[sCurrentIndex]
 		local new_index = cmd[2](cmd[3])
 		sCurrentIndex = new_index or sCurrentIndex+1
+		yield()
 	end
 	osdprintf("sScriptStatus: %2i\nsCurrentCmd: 0x%02x\n", sScriptStatus, sCurrentCmd[sCurrentIndex][1])
 	
