@@ -136,10 +136,12 @@ local function level_cmd_begin_area(args)
 	local geoLayout = args[2]
 	
 	if areaIndex < 8 then
-		-- Something funny is happening here. The original C code is specifying the return struct. I think some kind of cast or conversion is happening, but I'm not really sure how to deal with it properly.
-		local screenArea = process_geo_layout(sLevelPool, geoLayout).root -- Hack
-		local node = false and screenArea.views[1] -- TODO: For some reason, if I do this, the node has no config field.
-		
+		-- The original C code in n64decomp/sm64 right about here looks like this:
+		--struct GraphNodeRoot *screenArea = (struct GraphNodeRoot *) process_geo_layout(sLevelPool, geoLayoutAddr);
+		-- I don't know C, but I think this is some kind of cast or conversion. 'process_geo_layout' returns a GraphNode, not a GraphNodeRoot, but later code depends on it being a GraphNodeRoot. This happens elsewhere as well. I am not 100% certain the way I have implemented this actually matches the behavior of the original, but the 'extension' field of a GraphNode should be whatever object it's inside of, in this case a GraphNodeRoot.
+		local screenArea = process_geo_layout(sLevelPool, geoLayout).extension
+		local node = screenArea.views[1].extension.extension -- Extra hacky!
+				
 		sCurrAreaIndex = areaIndex
 		screenArea.areaIndex = areaIndex
 		gAreas[areaIndex].unk04 = screenArea

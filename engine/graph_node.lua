@@ -75,10 +75,12 @@ end
 -- An extension of a graph node that includes a function.
 -- Many graph node types have an update function that gets called when they are processed.
 local function FnGraphNode()
-	return {
+	local obj = {
 		node = GraphNode(),
 		func = nil,
 	}
+	obj.node.extension = obj -- Hack
+	return obj
 end
 
 -- The very root of the geo tree. Specifies the viewport.
@@ -93,7 +95,7 @@ local function GraphNodeRoot()
 		numViews = -0x0000,
 		views = nil,
 	}
-	obj.node.root = obj -- Hack
+	obj.node.extension = obj -- Hack
 	return obj
 end
 function init_graph_node_root(graphNode, areaIndex, x, y, width, height)
@@ -112,10 +114,12 @@ end
 -- A node that sets up an orthographic projection based on the global
 -- root node. Used to draw the skybox image.
 local function GraphNodeOrthoProjection()
-	return {
+	local obj = {
 		node = GraphNode(),
 		scale = 0.0, -- float
 	}
+	obj.node.extension = obj -- Hack
+	return obj
 end
 function init_graph_node_ortho_projection(graphNode, scale)
 	graphNode = graphNode or GraphNodeOrthoProjection()
@@ -125,12 +129,14 @@ function init_graph_node_ortho_projection(graphNode, scale)
 end
 
 local function GraphNodePerspective()
-	return {
+	local obj = {
 		fnNode = FnGraphNode(),
 		fov = 0.0, -- float; horizontal field of view in degrees
 		near = -0x0000, -- near clipping plane
 		far = -0x0000, -- near clipping plane
 	}
+	obj.fnNode.extension = obj -- Hack
+	return obj
 end
 function init_graph_node_perspective(graphNode, fov, near, far, nodeFunc)
 	graphNode = graphNode or GraphNodePerspective()
@@ -148,7 +154,7 @@ end
 -- GraphNode that specifies the location and aim of the camera.
 -- When the roll is 0, the up vector is (0, 1, 0).
 local function GraphNodeCamera()
-	return {
+	local obj = {
 		fnNode = FnGraphNode(),
 		config = {
 			-- When the node is created, a mode is assigned to the node.
@@ -162,6 +168,8 @@ local function GraphNodeCamera()
 		roll = -0x0000, -- roll in look at matrix. Doesn't account for light direction unlike rollScreen.
 		rollScreen = -0x0000, -- rolls screen while keeping the light direction consistent
 	}
+	obj.fnNode.extension = obj -- Hack
+	return obj
 end
 function init_graph_node_camera(graphNode, pos, focus, func, mode)
 	graphNode = graphNode or GraphNodeCamera()
@@ -182,11 +190,13 @@ end
 -- Each list has its own render mode, so for example water is drawn in a different master list than opaque objects.
 -- It also sets the z-buffer on before rendering and off after.
 local function GraphNodeMasterList()
-	return {
+	local obj = {
 		node = GraphNode(),
 		listHeads = {},
 		listTails = {},
 	}
+	obj.node.extension = obj -- Hack
+	return obj
 end
 function init_graph_node_master_list(graphNode, on)
 	graphNode = graphNode or GraphNodeMasterList()
@@ -198,10 +208,12 @@ function init_graph_node_master_list(graphNode, on)
 end
 
 local function GraphNodeGenerated()
-	return {
+	local obj = {
 		fnNode = FnGraphNode(),
 		parameter = 0x00000000, -- extra context for the function
 	}
+	obj.fnNode.extension = obj -- Hack
+	return obj
 end
 function init_graph_node_generated(graphNode, gfxFunc, parameter)
 	graphNode = graphNode or GraphNodeGenerated()
@@ -215,10 +227,12 @@ function init_graph_node_generated(graphNode, gfxFunc, parameter)
 end
 
 function GraphNodeBackground()
-	return {
+	local obj = {
 		fnNode = FnGraphNode(),
 		background = -0x00000000, -- background ID, or rgba5551 color if fnNode.func is null
 	}
+	obj.fnNode.extension = obj -- Hack
+	return obj
 end
 function init_graph_node_background(graphNode, background, backgroundFunc)
 	graphNode = graphNode or GraphNodeBackground()

@@ -24,6 +24,82 @@
 	  - Script node (Cannon overlay)
 ]]
 
+local function geo_process_ortho_projection(node)
+	if not node.scale then
+		errorf("node '%s' needs to be GraphNodeOrthoProjection not GraphNode", tostring(node))
+	end
+end
+
+-- Process a generic geo node and its siblings.
+-- The first argument is the start node, and all its siblings will be iterated over.
+local geo_try_process_children
+local lookup = {
+	[GRAPH_NODE_TYPE_ORTHO_PROJECTION] = geo_process_ortho_projection,
+	[GRAPH_NODE_TYPE_PERSPECTIVE] = geo_process_perspective,
+	[GRAPH_NODE_TYPE_MASTER_LIST] = geo_process_master_list,
+	[GRAPH_NODE_TYPE_LEVEL_OF_DETAIL] = geo_process_level_of_detail,
+	[GRAPH_NODE_TYPE_SWITCH_CASE] = geo_process_switch,
+	[GRAPH_NODE_TYPE_CAMERA] = geo_process_camera,
+	[GRAPH_NODE_TYPE_TRANSLATION_ROTATION] = geo_process_translation_rotation,
+	[GRAPH_NODE_TYPE_TRANSLATION] = geo_process_translation,
+	[GRAPH_NODE_TYPE_ROTATION] = geo_process_rotation,
+	[GRAPH_NODE_TYPE_OBJECT] = geo_process_object,
+	[GRAPH_NODE_TYPE_ANIMATED_PART] = geo_process_animated_part,
+	[GRAPH_NODE_TYPE_BILLBOARD] = geo_process_billboard,
+	[GRAPH_NODE_TYPE_DISPLAY_LIST] = geo_process_display_list,
+	[GRAPH_NODE_TYPE_SCALE] = geo_process_scale,
+	[GRAPH_NODE_TYPE_SHADOW] = geo_process_shadow,
+	[GRAPH_NODE_TYPE_OBJECT_PARENT] = geo_process_object_parent,
+	[GRAPH_NODE_TYPE_GENERATED_LIST] = geo_process_generated_list,
+	[GRAPH_NODE_TYPE_BACKGROUND] = geo_process_background,
+	[GRAPH_NODE_TYPE_HELD_OBJ] = geo_process_held_object,
+}
+local function geo_process_node_and_siblings(firstNode)
+	local iterateChildren = true
+	local curGraphNode = firstNode
+	local parent = curGraphNode.parent
+	
+	-- In the case of a switch node, exactly one of the children of the node is processed instead of all children like usual
+	if parent then
+		iterateChildren = parent.type ~= GRAPH_NODE_TYPE_SWITCH_CASE
+	end
+	
+	while iterateChildren do
+		if bit.band(curGraphNode.flags, GRAPH_RENDER_ACTIVE) ~= 0 then
+			if bit.band(curGraphNode.flags, GRAPH_RENDER_CHILDREN_FIRST) ~= 0 then
+				geo_try_process_children(curGraphNode)
+			else
+				-- cast to various?
+				local func = lookup[curGraphNode.type]
+				if func then
+					func(curGraphNode.extension)
+				else
+					--printf("[geo_process_node_and_siblings] WARNING: No function for type 0x%03x\n", curGraphNode.type)
+					geo_try_process_children(curGraphNode)
+				end
+			end
+		elseif curGraphNode.type == GRAPH_NODE_TYPE_OBJECT then
+			-- cast to GraphNodeObject?
+			curGraphNode.throwMatrix = nil
+		end
+		osdprintf("curGraphNode.flags: 0x%03x\n", curGraphNode.type)
+		curGraphNode = curGraphNode.next
+		if curGraphNode == firstNode then
+			break
+		end
+		yield()
+	end
+end
+
+-- Processes the children of the given GraphNode if it has any
+function geo_try_process_children(node)
+	if node.children then
+		geo_process_node_and_siblings(node.children)
+	end
+end
+
+-- Process a root node. This is the entry point for processing the scene graph.
+-- The root node itself sets up the viewport, then all its children are processed to set up the projection and draw display lists.
 function geo_process_root(node, b, c, clearColor)
 	if not node.node then
 		printTable(node)
