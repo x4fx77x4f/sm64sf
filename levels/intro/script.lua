@@ -18,7 +18,7 @@ level_intro_splash_screen = {
 
 	CALL(--[[arg]] LVL_INTRO_PLAY_ITS_A_ME_MARIO, --[[func]] lvl_intro_update),
 	SLEEP(--[[frames]] 75),
-	TRANSITION(--[[transType]] WARP_TRANSITION_FADE_INTO_COLOR, --[[time]] 16, --[[color]] 0x00, 0x00, 0x00), -- TODO: revert
+	TRANSITION(--[[transType]] WARP_TRANSITION_FADE_INTO_COLOR, --[[time]] 16, --[[color]] 0x00, 0x00, 0x00),
 	SLEEP(--[[frames]] 16),
 	CMD2A(--[[unk2]] 1),
 	CLEAR_LEVEL(),
