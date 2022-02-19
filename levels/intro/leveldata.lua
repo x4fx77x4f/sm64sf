@@ -1,6 +1,13 @@
 -- The equivalents of this file in n64decomp/sm64 are 'src/levels/intro/leveldata.c'
 -- The equivalent of this file in sm64js is 'src/levels/intro/leveldata.js'
 
+-- 0x0700B3A0 - 0x0700B420
+function intro_seg7_dl_0700B3A0()
+	render.setRGBA(127, 255, 127, 255)
+	render.setFont('DermaDefault')
+	render.drawText(SCREEN_WIDTH/2, SCREEN_HEIGHT/3*1, "intro_seg7_dl_0700B3A0", TEXT_ALIGN.CENTER, TEXT_ALIGN.CENTER)
+end
+
 -- 0x0700B4A0 - 0x0700B4A2
 if VERSION_EU or VERSION_SH then
 	intro_seg7_texture_0700B4A0 = 'levels/intro/2_eu_copyright.rgba16.inc.c'
@@ -15,6 +22,12 @@ elseif VERSION_SH then
 	intro_seg7_texture_0700C4A0 = "levels/intro/3_sh_tm.rgba16.inc.c"
 else
 	intro_seg7_texture_0700C4A0 = 'levels/intro/3_tm.rgba16.inc.c'
+end
+
+-- 0x0700C6A0 - 0x0700C790
+function intro_seg7_dl_0700C6A0()
+	render.setFont('DermaDefault')
+	render.drawText(SCREEN_WIDTH/2, SCREEN_HEIGHT/4*3, "intro_seg7_dl_0700C6A0", TEXT_ALIGN.CENTER, TEXT_ALIGN.CENTER)
 end
 
 -- 0x0700C790

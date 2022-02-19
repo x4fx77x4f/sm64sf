@@ -60,10 +60,7 @@ function geo_intro_super_mario_64_logo(state, node, context)
 		mtx:setScale(scale)
 		
 		render.pushMatrix(mtx)
-			-- TODO: Draw the actual logo
-			render.setRGBA(127, 255, 127, 255)
-			render.setFont('DermaDefault')
-			render.drawText(SCREEN_WIDTH, 0, "geo_intro_super_mario_64_logo", TEXT_ALIGN.RIGHT)
+			intro_seg7_dl_0700B3A0()
 		render.popMatrix()
 		
 		sIntroFrameCounter = sIntroFrameCounter+1
@@ -81,8 +78,7 @@ function geo_intro_tm_copyright(state, node, context)
 		else -- blend
 			node.flags = bit.bor(bit.band(node.flags, 0xff), bit.lshift(LAYER_TRANSPARENT, 8))
 		end
-		render.setFont('DermaDefault')
-		render.drawText(SCREEN_WIDTH, 20, "geo_intro_tm_copyright", TEXT_ALIGN.RIGHT)
+		intro_seg7_dl_0700C6A0()
 		
 		-- Once the "Super Mario 64" logo has just about zoomed fully, fade in the "TM" and copyright text
 		if sIntroFrameCounter >= 19 then
