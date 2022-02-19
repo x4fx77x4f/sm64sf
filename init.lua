@@ -32,17 +32,19 @@ else
 	function osdclear() end
 end
 
+ENHANCEMENTS = true
+
 VERSION_JP = false -- 1996 Japanese version
 VERSION_US = true -- 1996 North American version
 VERSION_EU = false -- 1997 PAL version
 VERSION_SH = false -- 1997 Japanese Shindou version
 
-ENABLE_RUMBLE = false or VERSION_SH
+ENABLE_RUMBLE = ENHANCEMENTS or VERSION_SH
 
 SCREEN_WIDTH = 320
 SCREEN_HEIGHT = 240
 
-BORDER_HEIGHT = 0
+BORDER_HEIGHT = not ENHANCEMENTS and (VERSION_EU and 1 or 8) or 0
 
 --@include ./game/screen_transition.lua
 dofile('./game/screen_transition.lua')
