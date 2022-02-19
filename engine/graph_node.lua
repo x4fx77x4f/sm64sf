@@ -223,6 +223,7 @@ function init_graph_node_generated(graphNode, gfxFunc, parameter)
 	if gfxFunc then
 		gfxFunc(GEO_CONTEXT_CREATE, graphNode.fnNode.node)
 	end
+	--printf("[init_graph_node_generated] graphNode: %q, gfxFunc: %q, parameter: %q\n", tostring(graphNode), tostring(gfxFunc), tostring(parameter))
 	return graphNode
 end
 

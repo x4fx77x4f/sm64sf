@@ -261,6 +261,7 @@ function level_script_execute(cmd, index)
 	end
 	osdprintf("sScriptStatus: %2i\nsCurrentCmd: 0x%02x\n", sScriptStatus, sCurrentCmd[sCurrentIndex][1])
 	
+	clear_framebuffer(Color(0, 0, 0)) -- Hack
 	render_game()
 	
 	return sCurrentCmd, sCurrentIndex

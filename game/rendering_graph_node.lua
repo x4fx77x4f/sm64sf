@@ -24,9 +24,41 @@
 	  - Script node (Cannon overlay)
 ]]
 
+local gMatStackIndex = -0x0000
+local gMatStack = {} --[32]
+local gMatStackFixed = {} --[32]
+
 local function geo_process_ortho_projection(node)
 	if not node.scale then
 		errorf("node '%s' needs to be GraphNodeOrthoProjection not GraphNode", tostring(node))
+	end
+	-- TODO: Unstub geo_process_ortho_projection
+	if node.node.children then
+		geo_process_node_and_siblings(node.node.children)
+	end
+end
+
+local function geo_process_perspective(node)
+	-- TODO: Unstub geo_process_perspective
+	if node.fnNode.func then
+		node.fnNode.func(GEO_CONTEXT_RENDER, node.fnNode.node, gMatStack[gMatStackIndex])
+	end
+	if node.fnNode.node.children then
+		geo_process_node_and_siblings(node.node.children)
+	end
+end
+
+local function geo_process_generated_list(node)
+	node = node.extension -- Hack
+	if not node.parameter then
+		printTable(node)
+		errorf("node '%s' needs to be GraphNodeGenerated not GraphNode", tostring(node))
+	end
+	if node.fnNode.func then
+		node.fnNode.func(GEO_CONTEXT_RENDER, node.fnNode.node, gMatStack[gMatStackIndex])
+	end
+	if node.fnNode.node.children then
+		geo_process_node_and_siblings(node.node.children)
 	end
 end
 
@@ -107,6 +139,7 @@ function geo_process_root(node, b, c, clearColor)
 	end
 	if bit.band(node.node.flags, GRAPH_RENDER_ACTIVE) ~= 0 then
 		local viewport = Vp()
+		gMatStackIndex = 0
 		viewport.vp.vtrans:setX(node.x*4):setY(node.y*4):setZ(511)
 		viewport.vp.vscale:setX(node.width*4):setY(node.height*4):setZ(511)
 		if b then

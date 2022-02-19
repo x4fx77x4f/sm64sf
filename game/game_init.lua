@@ -28,7 +28,8 @@ function clear_framebuffer(color)
 	render.setColor(color)
 	-- TODO: Implement and use GFX_DIMENSIONS_RECT_FROM_*_EDGE
 	-- TODO: Is the -1 significant? Is it supposed to leave the rightmost and bottommost lines uncleared?
-	render.drawRect(0, BORDER_HEIGHT, SCREEN_WIDTH-1, SCREEN_HEIGHT-BORDER_HEIGHT-1)
+	--render.drawRect(0, BORDER_HEIGHT, SCREEN_WIDTH-1, SCREEN_HEIGHT-BORDER_HEIGHT-1)
+	render.clear(color)
 end
 
 function Vp()

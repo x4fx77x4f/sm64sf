@@ -78,6 +78,12 @@ if VERSION_EU then
 	}
 end
 
+function override_viewport_and_clip(a, b, c, d, e)
+	-- TODO: Set gFBSetColor in override_viewport_and_clip
+	D_8032CE74 = a
+	D_8032CE78 = b
+end
+
 local function set_warp_transition_rgb(red, green, blue)
 	gWarpTransFBSetColor = Color(red, green, blue)
 	gWarpTransRed = red

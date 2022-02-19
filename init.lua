@@ -59,6 +59,10 @@ dofile('./engine/geo_layout.lua')
 dofile('./engine/level_script.lua')
 --@include ./menu/title_screen.lua
 dofile('./menu/title_screen.lua')
+--@include ./levels/intro/leveldata.lua
+dofile('./levels/intro/leveldata.lua')
+--@include ./menu/intro_geo.lua
+dofile('./menu/intro_geo.lua')
 --@include ./levels/intro/geo.lua
 dofile('./levels/intro/geo.lua')
 --@include ./levels/intro/script.lua
@@ -89,6 +93,7 @@ hook.add('render', '', function()
 	render.disableScissorRect()
 	render.selectRenderTarget()
 	render.setRGBA(255, 255, 255, 255)
+	render.enableDepth(false)
 	local rt = draw_framebuffer()
 	
 	if VERBOSE then
