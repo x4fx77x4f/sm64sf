@@ -87,7 +87,7 @@ local function handle_vsync(resume_time)
 	gGlobalTimer = gGlobalTimer+1
 end
 
-local max_quota = quotaMax()*0.25
+local max_quota = math.min(quotaMax()*0.25, 0.006)
 function yield(...)
 	if math.max(quotaAverage(), quotaTotalAverage()) >= max_quota then
 		coroutine.yield(...)
