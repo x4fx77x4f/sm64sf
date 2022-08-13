@@ -247,7 +247,7 @@ function init_graph_node_background(graphNode, background, backgroundFunc)
 end
 
 -- Adds 'childNode' to the end of the list children from 'parent'
-function geo_add_child(parent, childNode)
+local function geo_add_child(parent, childNode)
 	if childNode then
 		childNode.parent = parent
 		local parentFirstChild = parent.children
@@ -273,6 +273,7 @@ function register_scene_graph_node(graphNode)
 		if gCurGraphNodeIndex == 1 then
 			gCurRootGraphNode = gCurRootGraphNode or graphNode
 		elseif gCurGraphNodeList[gCurGraphNodeIndex - 1].type == GRAPH_NODE_TYPE_OBJECT_PARENT then
+			-- cast GraphNodeObjectParent
 			gCurGraphNodeList[gCurGraphNodeIndex - 1].sharedChild = graphNode
 		else
 			geo_add_child(gCurGraphNodeList[gCurGraphNodeIndex - 1], graphNode)

@@ -28,6 +28,47 @@ local gMatStackIndex = -0x0000
 local gMatStack = {} --[32]
 local gMatStackFixed = {} --[32]
 
+local gCurGraphNodeMasterList
+local gCurGraphNodeCamFrustum
+
+local gViewMatrix
+local geo_process_node_and_siblings
+
+local gIterations = 0
+
+local function geo_process_master_list_sub(node)
+	local enableZBuffer = bit.band(node.node.flags, GRAPH_RENDER_Z_BUFFER) ~= 0
+	
+	if enableZBuffer then
+		render.enableDepth(true)
+	end
+	local currList
+	for i=1, GFX_NUM_MASTER_LISTS do
+		currList = node.listHeads[i]
+		if currList then
+			while currList do
+				currList = currList.next
+				yield()
+			end
+		end
+	end
+	if enableZBuffer then
+		render.enableDepth(false)
+	end
+end
+
+local function geo_process_master_list(node)
+	if not gCurGraphNodeMasterList and node.node.children then
+		gCurGraphNodeMasterList = node
+		for i=1, GFX_NUM_MASTER_LISTS do
+			node.listHeads[i] = nil
+		end
+		geo_process_node_and_siblings(node.node.children)
+		geo_process_master_list_sub(node)
+		gCurGraphNodeMasterList = nil
+	end
+end
+
 local function geo_process_ortho_projection(node)
 	if not node.scale then
 		errorf("node '%s' needs to be GraphNodeOrthoProjection not GraphNode", tostring(node))
@@ -39,12 +80,33 @@ local function geo_process_ortho_projection(node)
 end
 
 local function geo_process_perspective(node)
-	-- TODO: Unstub geo_process_perspective
 	if node.fnNode.func then
 		node.fnNode.func(GEO_CONTEXT_RENDER, node.fnNode.node, gMatStack[gMatStackIndex])
 	end
+	-- TODO: Wait, what? Isn't this supposed to have children? What's going on here?
+	local aspect = gCurGraphNodeRoot.width / gCurGraphNodeRoot.height
+	if VERSION_EU then
+		aspect = aspect * 1.1
+	end
+	
+	assert(not gViewMatrix, "gViewMatrix already exists!")
+	gViewMatrix = true
+	render.pushViewMatrix({
+		x = 0,
+		y = 0,
+		w = SCREEN_WIDTH,
+		h = SCREEN_HEIGHT,
+		type = '3D',
+		fov = node.fov,
+		aspect = aspect,
+		zfar = node.far,
+		znear = node.near,
+	})
+	osdprintf("fov: %5.1f, aspect: %4.2f", node.fov, aspect)
 	if node.fnNode.node.children then
-		geo_process_node_and_siblings(node.node.children)
+		gCurGraphNodeCamFrustum = node
+		geo_process_node_and_siblings(node.fnNode.node.children)
+		gCurGraphNodeCamFrustum = nil
 	end
 end
 
@@ -86,7 +148,16 @@ local lookup = {
 	[GRAPH_NODE_TYPE_BACKGROUND] = geo_process_background,
 	[GRAPH_NODE_TYPE_HELD_OBJ] = geo_process_held_object,
 }
-local function geo_process_node_and_siblings(firstNode)
+local lookup_debug = {}
+if VERBOSE then
+	for k, v in pairs(_G) do
+		if string.sub(k, 1, 11) == 'GRAPH_NODE_' then
+			lookup_debug[v] = k
+		end
+	end
+end
+function geo_process_node_and_siblings(firstNode)
+	gIterations = gIterations+1
 	local iterateChildren = true
 	local curGraphNode = firstNode
 	local parent = curGraphNode.parent
@@ -96,7 +167,11 @@ local function geo_process_node_and_siblings(firstNode)
 		iterateChildren = parent.type ~= GRAPH_NODE_TYPE_SWITCH_CASE
 	end
 	
+	if not iterateChildren then
+		osdprintf("gpnas:fN: %d, 0x%03x (%s)\n", gIterations, firstNode.type, lookup_debug[firstNode.type] or "nil")
+	end
 	while iterateChildren do
+		osdprintf("gpnas:cGN: %d, 0x%03x (%s)\n", gIterations, curGraphNode.type, lookup_debug[curGraphNode.type] or "nil")
 		if bit.band(curGraphNode.flags, GRAPH_RENDER_ACTIVE) ~= 0 then
 			if bit.band(curGraphNode.flags, GRAPH_RENDER_CHILDREN_FIRST) ~= 0 then
 				geo_try_process_children(curGraphNode)
@@ -107,6 +182,7 @@ local function geo_process_node_and_siblings(firstNode)
 					func(curGraphNode.extension)
 				else
 					--printf("[geo_process_node_and_siblings] WARNING: No function for type 0x%03x\n", curGraphNode.type)
+					assert(curGraphNode.next, "not a GraphNode")
 					geo_try_process_children(curGraphNode)
 				end
 			end
@@ -114,12 +190,16 @@ local function geo_process_node_and_siblings(firstNode)
 			-- cast to GraphNodeObject?
 			curGraphNode.throwMatrix = nil
 		end
-		osdprintf("curGraphNode.flags: 0x%03x\n", curGraphNode.type)
 		curGraphNode = curGraphNode.next
 		if curGraphNode == firstNode then
 			break
 		end
 		yield()
+	end
+	
+	if gViewMatrix then
+		gViewMatrix = nil
+		render.popViewMatrix()
 	end
 end
 
@@ -127,6 +207,8 @@ end
 function geo_try_process_children(node)
 	if node.children then
 		geo_process_node_and_siblings(node.children)
+	else
+		osdprintf("gIterations: %d, node.type: 0x%03x\n", gIterations, node.type)
 	end
 end
 
@@ -137,6 +219,7 @@ function geo_process_root(node, b, c, clearColor)
 		printTable(node)
 		errorf("node '%s' needs to be GraphNodeRoot not GraphNode", tostring(node))
 	end
+	gIterations = 0
 	if bit.band(node.node.flags, GRAPH_RENDER_ACTIVE) ~= 0 then
 		local viewport = Vp()
 		gMatStackIndex = 0
