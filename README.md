@@ -4,7 +4,7 @@
 
 This was an **unofficial** port of Nintendo's *Super Mario 64* to [StarfallEx](https://github.com/thegrb93/StarfallEx). Almost everything had been translated manually. **It was extremely early in development and did not do anything exciting.**
 
-![Screenshot](https://user-images.githubusercontent.com/70858634/118589730-f8008000-b76e-11eb-9c90-0c3befbd37be.png)
+![Screenshot](https://github.com/x4fx77x4f/sm64sf/assets/70858634/263eabaa-b63e-41a6-9e61-8716af597ecd)
 
 ## Roadmap
 
