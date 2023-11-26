@@ -7,7 +7,9 @@ sIntroFrameCounter = nil
 sTmCopyrightAlpha = nil
 
 -- Geo callback to render the "Super Mario 64" logo on the title screen
-function geo_intro_super_mario_64_logo(state, node, context)
+-- sm64js equivalent: geo_title_screen(param, graphNode, unused)
+function geo_intro_super_mario_64_logo(self, state, node, context)
+	dbgprintf("[geo_intro_super_mario_64_logo] state: %q, node: %q\n", tostring(state), tostring(node))
 	local graphNode = node
 	local dl = nil
 	local dlIter = nil
@@ -52,8 +54,10 @@ function geo_intro_super_mario_64_logo(state, node, context)
 		--gSPPopMatrix(G_MTX_MODELVIEW)
 		--gSPEndDisplayList()
 		
+		render.setRGBA(255, 255, 255, 255)
 		render.setFont('DermaLarge')
-		render.drawSimpleText(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, "geo_intro_super_mario_64_logo", 1, 1)
+		render.drawSimpleText(20, 20, "geo_intro_super_mario_64_logo")
+		render.drawLine(0, 0, 1024, 1024)
 		
 		sIntroFrameCounter = sIntroFrameCounter+1
 	end
@@ -61,7 +65,8 @@ function geo_intro_super_mario_64_logo(state, node, context)
 end
 
 -- Geo callback to render TM and Copyright on the title screen
-function geo_intro_tm_copyright(state)
+-- sm64js equvalent: geo_fade_transition(param, graphNode, unused)
+function geo_intro_tm_copyright(self, state)
 	if state ~= 1 then -- reset
 		sTmCopyrightAlpha = 0
 	else -- draw
