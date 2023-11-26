@@ -1,6 +1,8 @@
 # SM64SF
 
-This is an **unofficial** port of Nintendo's *Super Mario 64* to [StarfallEx](https://github.com/thegrb93/StarfallEx). Almost everything has been translated manually. **It is extremely early in development and currently does not do anything exciting.**
+**This project is defunct as of 2023-10-27.**
+
+This was an **unofficial** port of Nintendo's *Super Mario 64* to [StarfallEx](https://github.com/thegrb93/StarfallEx). Almost everything had been translated manually. **It was extremely early in development and did not do anything exciting.**
 
 ![Screenshot](https://user-images.githubusercontent.com/70858634/118589730-f8008000-b76e-11eb-9c90-0c3befbd37be.png)
 
@@ -17,7 +19,7 @@ This is an **unofficial** port of Nintendo's *Super Mario 64* to [StarfallEx](ht
 - [ ] Spawn in level
 - [ ] Move around level
 - [ ] ...
-- [ ] 100% complete one day?
+- [ ] 100% complete one day? (Oh, how foolish I was)
 
 ## Usage
 
@@ -32,8 +34,8 @@ This is an **unofficial** port of Nintendo's *Super Mario 64* to [StarfallEx](ht
 
 ## License
 
-This project is primarily derived from [sm64js](https://github.com/sm64js/sm64js) and [n64decomp/sm64](https://github.com/n64decomp/sm64). Those projects and this project are all originally derived from Nintendo's proprietary Super Mario 64. The overwhelming majority of the content in these repositories is non-free for this reason, regardless of any license they may have been claimed to be released under.
+This project was primarily derived from [sm64js](https://github.com/sm64js/sm64js) and [n64decomp/sm64](https://github.com/n64decomp/sm64). Those projects and this project were all originally derived from Nintendo's proprietary Super Mario 64. The overwhelming majority of the content in these repositories was non-free for this reason, regardless of any license they may have been claimed to be released under.
 
-While this project is without a doubt non-free, an effort has been made to reduce the amount of Nintendo-owned content in this repository. **Most** non-code assets such as textures, models, and sounds are not included and must be extracted from a ROM file. Absolutely nothing in this repository is based on the leaked source code for Super Mario 64 **to my knowledge**.
+While this project was without a doubt non-free, an effort had been made to reduce the amount of Nintendo-owned content in this repository. **Most** non-code assets such as textures, models, and sounds were not included and had to have been extracted from a ROM file. Absolutely nothing in this repository was based on the leaked source code for Super Mario 64 **to my knowledge**.
 
-This project may include a small amount of entirely original code, for which I would be willing to package separately under a free license if requested.
+This project may have included a small amount of entirely original code, for which I would be willing to package separately under a free license if requested.
